@@ -10,6 +10,8 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/audio-wav/Rnox/main/i
 ## What is Rnox?
 Rnox is an all-in-one tool designed to protect users from malicious code. It is based on [Guardian V2](https://github.com/GalacticHypernova/Guardian) by GalacticHypernova but rewritten and uses a modular based layout.
 
+The reason this was made is because Guardian V2 isn't developer friendly. The naming convention used in the original is minified ? and it's just not okay to look at. That is the reason why I rewrote it.
+
 Because it is based on Guardian V2, a 2 years old unupdated script, some methods may be patched and require new commits. I simply rewrote the layout and changed to a somewhat better coding practice, but I didn't rewrite the actual functions itself.
 
 ## Contributions
