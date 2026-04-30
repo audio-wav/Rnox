@@ -1,6 +1,11 @@
+<img width="847" height="205" alt="image" src="https://github.com/user-attachments/assets/acb3680a-75b9-42e7-bdc4-5f45ec0f1527" />
+
 Based on [Guardian V2](https://github.com/GalacticHypernova/Guardian)
 # Rnox
 An all-in-one tool for protecting users from malicious code
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/audio-wav/Rnox/main/init.luau"))()
+```
 
 ## What is Rnox?
 Rnox is an all-in-one tool designed to protect users from malicious code. It is based on [Guardian V2](https://github.com/GalacticHypernova/Guardian) by GalacticHypernova but rewritten and uses a modular based layout.
