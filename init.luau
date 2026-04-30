@@ -1,0 +1,90 @@
+--!strict
+--[[
+    Rnox
+    An open source Roblox defensive security script
+
+    Protects against malicious namecalls, webhook loggers,
+    forced chat, kick attempts, memory fingerprinting,
+    GUI detection, remote abuse, and more (check modules folder for detials)
+
+    Originally based on Guardian V2 by galactichypernova
+
+    Core.Rnox:SetAll(true) to enable all protections
+]]
+
+if not game:IsLoaded() then game.Loaded:Wait() end
+local getgenv: typeof(getgenv) = getgenv or getfenv :: any
+if getgenv().RnoxLoaded then return end
+getgenv().RnoxLoaded = true
+
+local Settings = {
+    Output = warn :: (...any) -> (),
+    MaliciousNamecalls = {
+        Enabled = true,
+        ShowNamecall = true,
+    },
+    ChatBan = {
+        Enabled = true,
+        Slash = true,
+        NewChat = true,
+    },
+    AntiLog = {
+        Enabled = true,
+        ShowInfo = true,
+        ShowDestination = true,
+        Payback = true,
+    },
+    AutoJoin = {
+        Enabled = true,
+        ShowServer = true,
+    },
+    AntiApi = {
+        Enabled = true,
+        ShowEndpoint = true,
+    },
+    PetSim = {
+        Enabled = true,
+        ShowUser = true,
+        Bank = true,
+        Mail = true,
+    },
+    PetSim99 = true,
+    MiningSim = true,
+    BeeSwarm = true,
+    AntiKick = true,
+    MemoryDetections = true,
+    GUIDetection = true,
+    GroupBypass = true,
+    ClearTrace = true,
+    AntiError = true,
+    AntiMessage = false,
+    AntiIdle = true,
+}
+
+local RnoxBase = ""
+local Loaded = {}
+
+local function Import(Path: string): any
+    if Loaded[Path] then return Loaded[Path] end
+    local Result = loadstring(game:HttpGet(RnoxBase .. Path))()
+    Loaded[Path] = Result
+    return Result
+end
+
+local Core = Import("core.luau").Build(Settings)
+local Modules = {
+    Import("modules/chat.luau"),
+    Import("modules/namecalls.luau"),
+    Import("modules/remotes.luau"),
+    Import("modules/memory.luau"),
+    Import("modules/network.luau"),
+    Import("modules/cleanup.luau"),
+}
+
+for _, Module in next, Modules do
+    task.spawn(function()
+        Module:Init(Core)
+    end)
+end
+
+Core.Settings.Output("Rnox Activated", "Rnox is now protecting you in the background.")
