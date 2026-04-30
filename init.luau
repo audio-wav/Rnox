@@ -1,7 +1,7 @@
 --!strict
 --[[
     Rnox
-    An open source Roblox defensive security script
+    An all-in-one tool for protecting users from malicious code
 
     Protects against malicious namecalls, webhook loggers,
     forced chat, kick attempts, memory fingerprinting,
