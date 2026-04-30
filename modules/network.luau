@@ -12,7 +12,7 @@ local function SerializeTable(Table: {[any]: any}, Depth: number): string
     local Indent = string.rep("\t", Depth)
     local Result = "{\n" .. Indent
     local Separator = ",\n" .. Indent
-    for Key, Value in pairs(Table) do
+    for Key, Value in next, Table do
         if type(Value) == "table" then
             Result = Result .. tostring(Key) .. " = " .. SerializeTable(Value, Depth + 1)
         else
