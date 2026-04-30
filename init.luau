@@ -87,4 +87,4 @@ for _, Module in next, Modules do
     end)
 end
 
-Core.Settings.Output("Rnox Activated", "Rnox is now protecting you in the background.")
+Core.Rnox:Notify("Rnox Activated", "Rnox is now protecting you in the background.")
