@@ -61,7 +61,7 @@ local Settings = {
     AntiIdle = true,
 }
 
-local RnoxBase = ""
+local RnoxBase = "https://raw.githubusercontent.com/audio-wav/Rnox/main/modules/"
 local Loaded = {}
 
 local function Import(Path: string): any
