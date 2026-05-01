@@ -185,6 +185,11 @@ task.spawn(function()
             ("Rnox is outdated (current: %s, latest: %s)"):format(Settings.Version, Version)
     	)
         Core.Rnox:Notify("Rnox Outdated", "Your Rnox may not work properly")
+    else
+        Core.Rnox:Notify(
+            "Rnox Present", 
+            ("Rnox is up to date (current: %s, latest: %s)"):format(Settings.Version, Version)
+        )
     end
 
     if Shout and Shout ~= "" then
