@@ -91,6 +91,7 @@ local function Build(Settings)
 
         local original: (...T) -> ...any = CloneFunction(fn)
         local active: (...T) -> ...any = original
+        local locking = false
 
         local function wrapper(...: T...): ...any
             return active(...)
@@ -98,34 +99,32 @@ local function Build(Settings)
 
         if HookFunction then
             ProtectedCall(function()
+                locking = true
                 local hooked = HookFunction(original, wrapper)
+                locking = false
+
                 if hooked then
                     active = hooked :: any
                 end
             end)
         end
 
-        local function NeedsRestore(): boolean
-            return active ~= original
-        end
-
         task.spawn(function()
             local delayTime = 0.1
             while task.wait(delayTime) do
-                if NeedsRestore() then
+                if locking then
+                    continue
+                end
+
+                if active ~= original then
                     ProtectedCall(function()
-                        if HookFunction then
-                            local hooked = HookFunction(original, wrapper)
-                            if hooked then
-                                active = hooked :: any
-                            else
-                                active = wrapper
-                            end
-                        else
-                            active = wrapper
+                        locking = true
+                        local hooked = HookFunction and HookFunction(original, wrapper) or wrapper
+                        locking = false
+                        if hooked then
+                            active = hooked :: any
                         end
                     end)
-
                     delayTime = math.min(delayTime * 1.5, 1)
                 else
                     delayTime = 0.1
