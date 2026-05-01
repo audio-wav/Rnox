@@ -1,6 +1,10 @@
 --!strict
 --[[
     Rnox/modules/cleanup.luau
+    Some may not be working as intended due to changes
+    Every function here is taken from the original
+    but rewritten blah blah you get the point
+
     - ClearTrace removes executor references in gc
     - AntiError disables ScriptContext.Error connections
     - AntiMessage disables LogService.MessageOut connections

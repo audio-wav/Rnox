@@ -1,15 +1,15 @@
 --!strict
 --[[
-    Rnox
+    Rnox/init.luau
     An all-in-one tool for protecting users from malicious code
-
-    Protects against malicious namecalls, webhook loggers,
-    forced chat, kick attempts, memory fingerprinting,
-    GUI detection, remote abuse, and more (check modules folder for detials)
-
     Originally based on Guardian V2 by galactichypernova
+    
+    https://github.com/audio-wav/Rnox
+    https://github.com/GalacticHypernova/Guardian
 
     Core.Rnox:SetAll(true) to enable all protections
+    Settings.Output can be set to a custom function 
+    to change how notifications are outputted
 ]]
 
 if not game:IsLoaded() then game.Loaded:Wait() end
