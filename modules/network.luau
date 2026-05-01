@@ -65,7 +65,7 @@ function Network:Init(Core: any): ()
                     return OriginalRequest(...)
                 end
                 local Url: string = Options.Url
-                if (StringFind(Url, "webhook") or StringFind(Url, "websec"))
+                if (StringFind(Url, "webhook") or StringFind(Url, "websec") or StringFind(Url, "lewisakura") or StringFind(Url, "api") or StringFind(Url, "status"))
                     and Settings.AntiLog.Enabled then
                     local InfoText: string = ""
                     if Settings.AntiLog.ShowInfo and Options.Body then
