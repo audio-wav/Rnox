@@ -4,8 +4,8 @@
     - https://github.com/audio-wav/Rnox/wiki
     - https://discord.gg/Q2sd6YEUZc
 ]]
-local Network = {}
 
+local Network = {}
 local function SerializeTable(
     Table: {[any]: any},
     Depth: number
