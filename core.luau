@@ -30,13 +30,33 @@ local function Build(Settings)
         or Missing("function", issentinelclosure)
         or Missing("function", is_protosmasher_closure)
         or function() return false end
-    local HttpRequest =
+    local RawRequest =
         Missing("function", request)
         or Missing("function", http_request)
         or (typeof(syn) == "table" and Missing("function", syn.request))
         or (typeof(http) == "table" and Missing("function", http.request))
         or (typeof(fluxus) == "table" and Missing("function", fluxus.request))
         or nil
+    type RequestOptions = {
+        Url: string,
+        Method: string?,
+        Headers: {[string]: string}?,
+        Body: string?,
+    }
+    local HttpRequest: ((opts: RequestOptions) -> any)?
+    if RawRequest then
+        HttpRequest = NewCClosure(function(opts: RequestOptions): any?
+            local Safe: RequestOptions = {
+                Url = rawget(opts, "Url"),
+                Method = rawget(opts, "Method") or "GET",
+                Headers = rawget(opts, "Headers"),
+                Body = rawget(opts, "Body"),
+            }
+            if type(Safe.Url) ~= "string" then return end
+            return RawRequest(Safe)
+        end)
+    end
+    local RawGet = CloneFunction(rawget)
     local StringFind = CloneFunction(string.find)
     local StringMatch = CloneFunction(string.match)
     local StringSub = CloneFunction(string.sub)
@@ -109,6 +129,7 @@ local function Build(Settings)
         GetGarbageCollection = GetGarbageCollection,
         IsExecutorClosure = IsExecutorClosure,
         HttpRequest = HttpRequest,
+        RawGet = RawGet,
         StringFind = StringFind,
         StringMatch = StringMatch,
         StringSub = StringSub,
