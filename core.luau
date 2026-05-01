@@ -82,19 +82,73 @@ local function Build(Settings)
         end)
     end
 
+    local function WrapHook<T...>(
+        fn: (...T) -> ...any
+    ): (...T) -> ...any
+        if typeof(fn) ~= "function" then
+            return fn :: any
+        end
+
+        local original: (...T) -> ...any = CloneFunction(fn)
+        local active: (...T) -> ...any = original
+
+        local function wrapper(...: T...): ...any
+            return active(...)
+        end
+
+        if HookFunction then
+            ProtectedCall(function()
+                local hooked = HookFunction(original, wrapper)
+                if hooked then
+                    active = hooked :: any
+                end
+            end)
+        end
+
+        local function NeedsRestore(): boolean
+            return active ~= original
+        end
+
+        task.spawn(function()
+            local delayTime = 0.1
+            while task.wait(delayTime) do
+                if NeedsRestore() then
+                    ProtectedCall(function()
+                        if HookFunction then
+                            local hooked = HookFunction(original, wrapper)
+                            if hooked then
+                                active = hooked :: any
+                            else
+                                active = wrapper
+                            end
+                        else
+                            active = wrapper
+                        end
+                    end)
+
+                    delayTime = math.min(delayTime * 1.5, 1)
+                else
+                    delayTime = 0.1
+                end
+            end
+        end)
+
+        return wrapper
+    end
+
     return {
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
         NewCClosure = NewCClosure,
-        HookMetamethod = HookMetamethod,
-        HookFunction = HookFunction,
+        HookMetamethod = WrapHook(HookMetamethod),
+        HookFunction = WrapHook(HookFunction),
         CheckCaller = CheckCaller,
         GetNamecallMethod = GetNamecallMethod,
         GetConnections = GetConnections,
         GetProperties = GetProperties,
         GetCallingScript = GetCallingScript,
-        GetGarbageCollection = GetGarbageCollection,
+        GetGarbageCollection = WrapHook(GetGarbageCollection),
         IsExecutorClosure = IsExecutorClosure,
         HttpRequest = HttpRequest,
         StringFind = StringFind,
@@ -119,7 +173,7 @@ local function Build(Settings)
         LocalPlayer = LocalPlayer,
         Character = Character,
         Settings = Settings,
-        Rnox = Rnox,
+        Rnox = Rnox
     }
 end
 
