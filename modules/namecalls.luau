@@ -102,7 +102,7 @@ local MaliciousNamecalls: {[string]: {[string]: any}} = {
     },
 }
 
-function Namecalls:Init(Core): ()
+function Namecalls:Init(Core: any): ()
     local Settings = Core.Settings
     local HookMetamethod = Core.HookMetamethod
     local HookFunction = Core.HookFunction
@@ -118,14 +118,14 @@ function Namecalls:Init(Core): ()
         return ""
     end
     if HookMetamethod then
-        local OriginalNamecall
-        OriginalNamecall = HookMetamethod(game, "__namecall", NewCClosure(function(Self, ...)
+        local OriginalNamecall: (any, ...any) -> any
+        OriginalNamecall = HookMetamethod(game, "__namecall", NewCClosure(function(Self: any, ...: any)
             if not Settings.MaliciousNamecalls.Enabled then
                 return OriginalNamecall(Self, ...)
             end
-            local MethodName = GetNamecallMethod and GetNamecallMethod() or ""
-            local ClassName = Self.ClassName
-            local ServiceEntry = MaliciousNamecalls[ClassName]
+            local MethodName: string = GetNamecallMethod and GetNamecallMethod() or ""
+            local ClassName: string = Self.ClassName
+            local ServiceEntry: {[string]: boolean}? = MaliciousNamecalls[ClassName]
             if ServiceEntry and ServiceEntry[MethodName] then
                 Settings.Output(
                     "Malicious namecall" .. BuildLabel(ClassName, MethodName) ..
@@ -139,16 +139,15 @@ function Namecalls:Init(Core): ()
             return OriginalNamecall(Self, ...)
         end))
     elseif HookFunction then
-        for ClassName, Methods in next, MaliciousNamecalls do
-            for MethodName in next, Methods do
+        for ClassName: string, Methods: {[string]: boolean} in next, MaliciousNamecalls do
+            for MethodName: string in next, Methods do
                 ProtectedCall(function()
-                    local ServiceObject = ClassName == "DataModel"
-                        and Game
-                        or Game:GetService(ClassName)
-                    local OriginalMethod
+                    local ServiceObject: any =
+                        ClassName == "DataModel" and Game or Game:GetService(ClassName)
+                    local OriginalMethod: (...any) -> any
                     OriginalMethod = HookFunction(
                         ServiceObject[MethodName],
-                        NewCClosure(function(...)
+                        NewCClosure(function(...: any)
                             if Settings.MaliciousNamecalls.Enabled then
                                 Settings.Output(
                                     "Malicious function" .. BuildLabel(ClassName, MethodName) ..

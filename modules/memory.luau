@@ -6,7 +6,7 @@
 ]]
 
 local Memory = {}
-function Memory:Init(Core): ()
+function Memory:Init(Core: any): ()
     local Settings = Core.Settings
     local HookMetamethod = Core.HookMetamethod
     local HookFunction = Core.HookFunction
@@ -22,15 +22,18 @@ function Memory:Init(Core): ()
     local MathRandom = Core.MathRandom
     local SavedProperties: {[Instance]: {[string]: any}} = {}
     if GetProperties then
-        ProtectedCall(function()
-            local Root = Character:FindFirstChild("HumanoidRootPart")
+        ProtectedCall(function(): ()
+            local Root: Instance? = Character:FindFirstChild("HumanoidRootPart")
             if not Root then
                 repeat task.wait() until #Character:GetChildren() > 0
             end
-            for _, Part in next, Character:GetChildren() do
+            for _, Part: Instance in next, Character:GetChildren() do
                 SavedProperties[Part] = {}
-                for PropertyName, PropertyValue in next, GetProperties(Part) do
-                    if typeof(PropertyValue) ~= "Vector3" and typeof(PropertyValue) ~= "CFrame" then
+                for PropertyName: string, PropertyValue: any in
+                    next, GetProperties(Part) do
+
+                    if typeof(PropertyValue) ~= "Vector3"
+                        and typeof(PropertyValue) ~= "CFrame" then
                         SavedProperties[Part][PropertyName] = PropertyValue
                     end
                 end
@@ -38,59 +41,83 @@ function Memory:Init(Core): ()
         end)
     end
     if HookMetamethod then
-        local OriginalNamecall
-        OriginalNamecall = HookMetamethod(game, "__namecall", NewCClosure(function(Self, ...)
-            local Method = GetNamecallMethod and GetNamecallMethod() or ""
-            local Arguments = { ... }
-            if Self == Stats and Method == "GetTotalMemoryUsageMb" and Settings.MemoryDetections then
-                return MathRandom(400, 550)
-            end
-            if Self == ContentProvider and Method == "PreloadAsync"
-                and typeof(Arguments[1]) == "table" and Settings.GUIDetection then
-                Settings.Output("GUI detection via PreloadAsync attempted. Attempt denied.")
-                return
-            end
-            return OriginalNamecall(Self, ...)
-        end))
-        if GetProperties then
-            local OriginalIndex
-            OriginalIndex = HookMetamethod(game, "__index", NewCClosure(function(Self, Key, ...)
-                local PartProperties = SavedProperties[Self]
-                if not CheckCaller() and PartProperties and PartProperties[Key] then
-                    return PartProperties[Key]
+        local OriginalNamecall: (any, ...any) -> any
+        OriginalNamecall = HookMetamethod(
+            game,
+            "__namecall",
+            NewCClosure(function(Self: any, ...: any)
+                local Method: string =
+                    GetNamecallMethod and GetNamecallMethod() or ""
+                local Arguments: {any} = { ... }
+                if Self == Stats
+                    and Method == "GetTotalMemoryUsageMb"
+                    and Settings.MemoryDetections then
+                    return MathRandom(400, 550)
                 end
-                return OriginalIndex(Self, Key, ...)
-            end))
+                if Self == ContentProvider
+                    and Method == "PreloadAsync"
+                    and typeof(Arguments[1]) == "table"
+                    and Settings.GUIDetection then
+                    Settings.Output(
+                        "GUI detection via PreloadAsync attempted. Attempt denied."
+                    )
+                    return
+                end
+                return OriginalNamecall(Self, ...)
+            end)
+        )
+
+        if GetProperties then
+            local OriginalIndex: (any, any, ...any) -> any
+            OriginalIndex = HookMetamethod(
+                game,
+                "__index",
+                NewCClosure(function(Self: any, Key: any, ...: any)
+                    local PartProperties: {[string]: any}? =
+                        SavedProperties[Self]
+                    if not CheckCaller()
+                        and PartProperties
+                        and PartProperties[Key] then
+                        return PartProperties[Key]
+                    end
+                    return OriginalIndex(Self, Key, ...)
+                end)
+            )
         end
     elseif HookFunction then
-        local OriginalGetTotalMemory
+        local OriginalGetTotalMemory: (any, ...any) -> any
         OriginalGetTotalMemory = HookFunction(
             Stats.GetTotalMemoryUsageMb,
-            NewCClosure(function(Self, ...)
+            NewCClosure(function(Self: any, ...: any)
                 if Settings.MemoryDetections and Self == Stats then
                     return MathRandom(400, 550)
                 end
                 return OriginalGetTotalMemory(Self, ...)
             end)
         )
-        local OriginalPreloadAsync
+        local OriginalPreloadAsync: (any, ...any) -> any
         OriginalPreloadAsync = HookFunction(
             ContentProvider.PreloadAsync,
-            NewCClosure(function(Self, ...)
-                local Arguments = { ... }
-                if Settings.GUIDetection and Self == ContentProvider
+            NewCClosure(function(Self: any, ...: any)
+                local Arguments: {any} = { ... }
+                if Settings.GUIDetection
+                    and Self == ContentProvider
                     and typeof(Arguments[1]) == "table" then
-                    Settings.Output("GUI detection via PreloadAsync attempted. Attempt denied.")
+                    Settings.Output(
+                        "GUI detection via PreloadAsync attempted. Attempt denied."
+                    )
                     return
                 end
                 return OriginalPreloadAsync(Self, ...)
             end)
         )
-        local OriginalGcInfo
+        local OriginalGcInfo: (...any) -> any
         OriginalGcInfo = HookFunction(
             gcinfo,
-            NewCClosure(function(...)
-                return Settings.MemoryDetections and MathRandom(1500, 2500) or OriginalGcInfo(...)
+            NewCClosure(function(...: any)
+                return Settings.MemoryDetections
+                    and MathRandom(1500, 2500)
+                    or OriginalGcInfo(...)
             end)
         )
     end

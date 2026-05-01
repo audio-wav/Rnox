@@ -6,7 +6,7 @@
 ]]
 
 local Cleanup = {}
-function Cleanup:Init(Core): ()
+function Cleanup:Init(Core: any): ()
     local Settings = Core.Settings
     local GetGarbageCollection = Core.GetGarbageCollection
     local GetConnections = Core.GetConnections
@@ -16,8 +16,8 @@ function Cleanup:Init(Core): ()
     local LogService = Core.LogService
     local LocalPlayer = Core.LocalPlayer
     if Settings.ClearTrace and GetGarbageCollection then
-        ProtectedCall(function()
-            for _, Value in next, GetGarbageCollection() do
+        ProtectedCall(function(): ()
+            for _, Value: any in next, GetGarbageCollection() do
                 if typeof(Value) == "function" and IsExecutorClosure(Value) then
                     Value = nil :: any
                 end
@@ -25,22 +25,25 @@ function Cleanup:Init(Core): ()
         end)
     end
     if Settings.AntiError and GetConnections then
-        ProtectedCall(function()
-            for _, Connection in next, GetConnections(ScriptContext.Error) do
+        ProtectedCall(function(): ()
+            for _, Connection: RBXScriptConnection in
+                next, GetConnections(ScriptContext.Error) do
                 Connection:Disable()
             end
         end)
     end
     if Settings.AntiMessage and GetConnections then
-        ProtectedCall(function()
-            for _, Connection in next, GetConnections(LogService.MessageOut) do
+        ProtectedCall(function(): ()
+            for _, Connection: RBXScriptConnection in
+                next, GetConnections(LogService.MessageOut) do
                 Connection:Disable()
             end
         end)
     end
     if Settings.AntiIdle and GetConnections then
-        ProtectedCall(function()
-            for _, Connection in next, GetConnections(LocalPlayer.Idled) do
+        ProtectedCall(function(): ()
+            for _, Connection: RBXScriptConnection in
+                next, GetConnections(LocalPlayer.Idled) do
                 Connection:Disable()
             end
         end)
