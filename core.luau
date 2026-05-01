@@ -31,6 +31,7 @@ local function Build(Settings)
         or Missing("function", issentinelclosure)
         or Missing("function", is_protosmasher_closure)
         or function() return false end
+    local RawGet = CloneFunction(rawget)
     local RawRequest =
         Missing("function", request)
         or Missing("function", http_request)
@@ -49,20 +50,21 @@ local function Build(Settings)
     local HttpRequest: ((opts: RequestOptions) -> any)?
     if RawRequest then
         local SafeRawRequest = CloneFunction(RawRequest)
-        HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            if getmetatable(opts) ~= nil then return end
-            local url = rawget(opts, "Url")
-            if type(url) ~= "string" then return end
+        local function MakeRequest(url: string, method: string, headers: any, body: any)
             return SafeRawRequest({
                 Url = url,
-                Method = rawget(opts, "Method") or "GET",
-                Headers = rawget(opts, "Headers"),
-                Body = rawget(opts, "Body"),
+                Method = method,
+                Headers = headers,
+                Body = body,
             })
+        end
+        HttpRequest = NewCClosure(function(opts: RequestOptions): any?
+            if getmetatable(opts) ~= nil then return end
+            local url = RawGet(opts, "Url")
+            if type(url) ~= "string" then return end
+            return MakeRequest(url, RawGet(opts, "Method") or "GET", RawGet(opts, "Headers"), RawGet(opts, "Body"))
         end)
     end
-
-    local RawGet = CloneFunction(rawget)
     local StringFind = CloneFunction(string.find)
     local StringMatch = CloneFunction(string.match)
     local StringSub = CloneFunction(string.sub)
