@@ -40,6 +40,12 @@ type SettingsType = {
         ShowDestination: boolean,
         Payback: boolean,
     },
+    HttpLogger: {
+        Enabled: boolean,
+        ShowMethod: boolean,
+        ShowHeaders: boolean,
+        ShowBody: boolean,
+    },
     AutoJoin: {
         Enabled: boolean,
         ShowServer: boolean,
@@ -81,7 +87,7 @@ type CoreType = {
 }
 
 local Settings: SettingsType = {
-    Version = "1.2",
+    Version = "1.3",
     Output = warn,
     MaliciousNamecalls = {
         Enabled = true,
@@ -97,6 +103,12 @@ local Settings: SettingsType = {
         ShowInfo = true,
         ShowDestination = true,
         Payback = true,
+    },
+    HttpLogger = {
+        Enabled = true,
+        ShowMethod = true,
+        ShowHeaders = false,
+        ShowBody = false
     },
     AutoJoin = {
         Enabled = true,

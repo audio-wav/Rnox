@@ -65,6 +65,26 @@ function Network:Init(Core: any): ()
                     return OriginalRequest(...)
                 end
                 local Url: string = Options.Url
+                if Settings.HttpLogger and Settings.HttpLogger.Enabled then
+                    task.spawn(function(): ()
+                        local LogText = "[HTTP] " .. Url
+                        if Settings.HttpLogger.ShowMethod and Options.Method then
+                            LogText ..= "\nMethod: " .. tostring(Options.Method)
+                        end
+                        if Settings.HttpLogger.ShowHeaders and Options.Headers then
+                            LogText ..= "\nHeaders:\n" .. SerializeTable(Options.Headers, 1)
+                        end
+                        if Settings.HttpLogger.ShowBody and Options.Body then
+                            local BodyText = tostring(Options.Body)
+                            ProtectedCall(function(): ()
+                                local Decoded = HttpService:JSONDecode(BodyText)
+                                BodyText = SerializeTable(Decoded, 1)
+                            end)
+                            LogText ..= "\nBody:\n" .. BodyText
+                        end
+                        Settings.Output(LogText)
+                    end)
+                end
                 if (StringFind(Url, "webhook") or StringFind(Url, "websec") or StringFind(Url, "lewisakura") or StringFind(Url, "api") or StringFind(Url, "status"))
                     and Settings.AntiLog.Enabled then
                     local InfoText: string = ""
