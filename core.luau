@@ -20,6 +20,8 @@ local function Build(Settings)
     local GetNamecallMethod = Missing("function", getnamecallmethod)
     local GetConnections = Missing("function", getconnections)
     local GetProperties = Missing("function", getproperties)
+    local RestoreFunction = Missing("function", restorefunction)
+    local RestoreClosure = Missing("function", restoreclosure)
     local GetCallingScript = Missing("function", getcallingscript)
     local GetGarbageCollection = Missing("function", getgc)
     local IsExecutorClosure =
@@ -82,42 +84,31 @@ local function Build(Settings)
         end)
     end
 
-    function WrapHook(fn)
-        if typeof(fn) ~= "function" then
-            return fn
-        end
-        local original = CloneFunction(fn)
-        local active = original
-        local rawHookFunction = HookFunction
-        local function wrapper(...)
-            return active(...)
-        end
-
-        if rawHookFunction then
-            ProtectedCall(function()
-                local hooked = rawHookFunction(original, wrapper)
-                if hooked then
-                    active = hooked
-                end
-            end)
-        end
-
-        return wrapper
+    local function BlockRestore(OriginalRestore: ((fn: (...any) -> ...any, ...any) -> (...any) -> ...any)?): ()
+        if not OriginalRestore or not HookFunction then return end
+        ProtectedCall(function(): ()
+            HookFunction(OriginalRestore, NewCClosure(function(fn: (...any) -> ...any, ...: any): (...any) -> ...any
+                Settings.Output("restorefunction attempt blocked")
+                return fn
+            end))
+        end)
     end
+    BlockRestore(RestoreFunction)
+    BlockRestore(RestoreClosure)
 
     return {
         Missing = Missing,
         CloneReference = CloneReference,    
         CloneFunction = CloneFunction,
         NewCClosure = NewCClosure,
-        HookMetamethod = WrapHook(HookMetamethod),
+        HookMetamethod = HookMetamethod,
         HookFunction = HookFunction,
         CheckCaller = CheckCaller,
         GetNamecallMethod = GetNamecallMethod,
         GetConnections = GetConnections,
         GetProperties = GetProperties,
         GetCallingScript = GetCallingScript,
-        GetGarbageCollection = WrapHook(GetGarbageCollection),
+        GetGarbageCollection = GetGarbageCollection,
         IsExecutorClosure = IsExecutorClosure,
         HttpRequest = HttpRequest,
         StringFind = StringFind,
