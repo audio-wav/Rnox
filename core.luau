@@ -59,12 +59,16 @@ local function Build(Settings)
             })
         end
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            if getmetatable(opts) ~= nil then return end
+            if getmetatable(opts) ~= nil then
+                Settings.Output("Fuck you")
+                return
+            end
             local url = RawGet(opts, "Url")
             if type(url) ~= "string" then return end
             return MakeRequest(url, RawGet(opts, "Method") or "GET", RawGet(opts, "Headers"), RawGet(opts, "Body"))
         end)
     end
+
     local StringFind = CloneFunction(string.find)
     local StringMatch = CloneFunction(string.match)
     local StringSub = CloneFunction(string.sub)
