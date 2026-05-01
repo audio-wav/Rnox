@@ -82,66 +82,36 @@ local function Build(Settings)
         end)
     end
 
-    local function WrapHook<T...>(
-        fn: (...T) -> ...any
-    ): (...T) -> ...any
+    function WrapHook(fn)
         if typeof(fn) ~= "function" then
-            return fn :: any
+            return fn
         end
-
-        local original: (...T) -> ...any = CloneFunction(fn)
-        local active: (...T) -> ...any = original
-        local locking = false
-
-        local function wrapper(...: T...): ...any
+        local original = CloneFunction(fn)
+        local active = original
+        local rawHookFunction = HookFunction
+        local function wrapper(...)
             return active(...)
         end
 
-        if HookFunction then
+        if rawHookFunction then
             ProtectedCall(function()
-                locking = true
-                local hooked = HookFunction(original, wrapper)
-                locking = false
-
+                local hooked = rawHookFunction(original, wrapper)
                 if hooked then
-                    active = hooked :: any
+                    active = hooked
                 end
             end)
         end
-
-        task.spawn(function()
-            local delayTime = 0.1
-            while task.wait(delayTime) do
-                if locking then
-                    continue
-                end
-
-                if active ~= original then
-                    ProtectedCall(function()
-                        locking = true
-                        local hooked = HookFunction and HookFunction(original, wrapper) or wrapper
-                        locking = false
-                        if hooked then
-                            active = hooked :: any
-                        end
-                    end)
-                    delayTime = math.min(delayTime * 1.5, 1)
-                else
-                    delayTime = 0.1
-                end
-            end
-        end)
 
         return wrapper
     end
 
     return {
         Missing = Missing,
-        CloneReference = CloneReference,
+        CloneReference = CloneReference,    
         CloneFunction = CloneFunction,
         NewCClosure = NewCClosure,
         HookMetamethod = WrapHook(HookMetamethod),
-        HookFunction = WrapHook(HookFunction),
+        HookFunction = HookFunction,
         CheckCaller = CheckCaller,
         GetNamecallMethod = GetNamecallMethod,
         GetConnections = GetConnections,
