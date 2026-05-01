@@ -80,7 +80,6 @@ type CoreType = {
     },
 }
 
-
 local Settings: SettingsType = {
     Version = "1.1",
     Output = warn,
