@@ -6,6 +6,7 @@
 ]]
 
 local function Build(Settings)
+    local FrozenSettings = table.freeze(table.clone(Settings))
     local Missing = function(ValueType, Value, Fallback)
         return type(Value) == ValueType and Value or Fallback
     end :: (<T>(ValueType: string, Value: T?, Fallback: T) -> T)
@@ -37,25 +38,30 @@ local function Build(Settings)
         or (typeof(http) == "table" and Missing("function", http.request))
         or (typeof(fluxus) == "table" and Missing("function", fluxus.request))
         or nil
+
     type RequestOptions = {
         Url: string,
         Method: string?,
         Headers: {[string]: string}?,
         Body: string?,
     }
+
     local HttpRequest: ((opts: RequestOptions) -> any)?
     if RawRequest then
+        local SafeRawRequest = CloneFunction(RawRequest)
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            local Safe: RequestOptions = {
-                Url = rawget(opts, "Url"),
+            if getmetatable(opts) ~= nil then return end
+            local url = rawget(opts, "Url")
+            if type(url) ~= "string" then return end
+            return SafeRawRequest({
+                Url = url,
                 Method = rawget(opts, "Method") or "GET",
                 Headers = rawget(opts, "Headers"),
                 Body = rawget(opts, "Body"),
-            }
-            if type(Safe.Url) ~= "string" then return end
-            return RawRequest(Safe)
+            })
         end)
     end
+
     local RawGet = CloneFunction(rawget)
     local StringFind = CloneFunction(string.find)
     local StringMatch = CloneFunction(string.match)
@@ -80,6 +86,7 @@ local function Build(Settings)
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
     local Rnox = {}
+
     function Rnox:SetAll(Value: boolean): ()
         for Key, Setting in next, Settings do
             if type(Setting) == "table" then
@@ -107,7 +114,6 @@ local function Build(Settings)
         if not OriginalRestore or not HookFunction then return end
         ProtectedCall(function(): ()
             HookFunction(OriginalRestore, NewCClosure(function(fn: (...any) -> ...any, ...: any): (...any) -> ...any
-                Settings.Output("restorefunction attempt blocked")
                 return fn
             end))
         end)
@@ -116,7 +122,7 @@ local function Build(Settings)
 
     return {
         Missing = Missing,
-        CloneReference = CloneReference,    
+        CloneReference = CloneReference,
         CloneFunction = CloneFunction,
         NewCClosure = NewCClosure,
         HookMetamethod = HookMetamethod,
@@ -151,7 +157,7 @@ local function Build(Settings)
         ReplicatedStorage = ReplicatedStorage,
         LocalPlayer = LocalPlayer,
         Character = Character,
-        Settings = Settings,
+        Settings = FrozenSettings,
         Rnox = Rnox
     }
 end
