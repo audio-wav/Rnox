@@ -67,7 +67,7 @@ function Network:Init(Core: any): ()
                 local Url: string = Options.Url
                 if Settings.HttpLogger and Settings.HttpLogger.Enabled then
                     task.spawn(function(): ()
-                        local LogText = "[HTTP] " .. Url
+                        local LogText: string = "[HTTP] " .. Url
                         if Settings.HttpLogger.ShowMethod and Options.Method then
                             LogText ..= "\nMethod: " .. tostring(Options.Method)
                         end
@@ -75,9 +75,9 @@ function Network:Init(Core: any): ()
                             LogText ..= "\nHeaders:\n" .. SerializeTable(Options.Headers, 1)
                         end
                         if Settings.HttpLogger.ShowBody and Options.Body then
-                            local BodyText = tostring(Options.Body)
+                            local BodyText: string = tostring(Options.Body)
                             ProtectedCall(function(): ()
-                                local Decoded = HttpService:JSONDecode(BodyText)
+                                local Decoded: any = HttpService:JSONDecode(BodyText)
                                 BodyText = SerializeTable(Decoded, 1)
                             end)
                             LogText ..= "\nBody:\n" .. BodyText
