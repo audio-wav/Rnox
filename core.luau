@@ -21,7 +21,6 @@ local function Build(Settings)
     local GetConnections = Missing("function", getconnections)
     local GetProperties = Missing("function", getproperties)
     local RestoreFunction = Missing("function", restorefunction)
-    local RestoreClosure = Missing("function", restoreclosure)
     local GetCallingScript = Missing("function", getcallingscript)
     local GetGarbageCollection = Missing("function", getgc)
     local IsExecutorClosure =
@@ -94,7 +93,6 @@ local function Build(Settings)
         end)
     end
     BlockRestore(RestoreFunction)
-    BlockRestore(RestoreClosure)
 
     return {
         Missing = Missing,
