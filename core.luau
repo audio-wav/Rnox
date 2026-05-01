@@ -2,6 +2,7 @@
 --[[
     Rnox/core.luau
     - https://github.com/audio-wav/Rnox/wiki
+    - https://discord.gg/Q2sd6YEUZc
 ]]
 
 local function Build(Settings)

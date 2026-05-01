@@ -1,7 +1,7 @@
 ![](rnox_assets/rnox_banner.png)
 Based on [Guardian V2](https://github.com/GalacticHypernova/Guardian)
 # Rnox
-An all-in-one tool for protecting users from malicious code
+An all-in-one tool for protecting users from malicious code [![](https://dcbadge.limes.pink/api/server/Q2sd6YEUZc?style=flat)](https://discord.gg/Q2sd6YEUZc)
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/audio-wav/Rnox/main/init.luau"))()
 ```

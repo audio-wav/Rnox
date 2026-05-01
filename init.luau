@@ -6,6 +6,7 @@
 
     https://github.com/audio-wav/Rnox
     https://github.com/audio-wav/Rnox/wiki
+    https://discord.gg/Q2sd6YEUZc
 
     https://github.com/GalacticHypernova/Guardian
 
