@@ -107,8 +107,8 @@ local Settings: SettingsType = {
     HttpLogger = {
         Enabled = true,
         ShowMethod = true,
-        ShowHeaders = false,
-        ShowBody = false
+        ShowHeaders = true,
+        ShowBody = true
     },
     AutoJoin = {
         Enabled = true,
