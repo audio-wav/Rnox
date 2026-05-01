@@ -1,6 +1,7 @@
 --!strict
 --[[
     Rnox/core.luau
+    Environment setup
 ]]
 
 local function Build(Settings)
