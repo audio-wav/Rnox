@@ -1,7 +1,7 @@
 --!strict
 --[[
     Rnox/core.luau
-    Environment setup
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local function Build(Settings)

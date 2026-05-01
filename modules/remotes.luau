@@ -1,16 +1,7 @@
 --!strict
 --[[
     Rnox/modules/remotes.luau
-    Almost everything in here is straight 
-    taken out of the original script so
-    some may not be working anymore
-
-    - MiningSim
-    - BeeSwarm fake dupe egg
-    - PetSim bank invite / mail send
-    - PetSim99 bank access
-    - LocalPlayer:Kick
-    - IsInGroup spoof
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local Remotes = {}

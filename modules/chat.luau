@@ -1,10 +1,7 @@
 --!strict
 --[[
     Rnox/modules/chat.luau
-    - SayMessageRequest FireServer disabled from non-chat scripts
-    - TextChannel:SendAsync disabled
-    - ChatBar:CaptureFocus disabled from non-chat scripts
-    - MessagePosted BindableEvent disabled
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local Chat = {}

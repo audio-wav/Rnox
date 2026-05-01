@@ -1,10 +1,7 @@
 --!strict
 --[[
     Rnox/modules/namecalls.luau
-    All it does is block malicious namecalls lol
-    Most executors already disables it by default
-    But I'm including it because some don't and well
-    It's guardian bro
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local Namecalls = {}

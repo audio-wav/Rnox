@@ -3,8 +3,10 @@
     Rnox/init.luau
     An all-in-one tool for protecting users from malicious code
     Originally based on Guardian V2 by galactichypernova
-    
+
     https://github.com/audio-wav/Rnox
+    https://github.com/audio-wav/Rnox/wiki
+
     https://github.com/GalacticHypernova/Guardian
 
     Core.Rnox:SetAll(true) to enable all protections

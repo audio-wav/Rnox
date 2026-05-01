@@ -1,13 +1,7 @@
 --!strict
 --[[
     Rnox/modules/memory.luau
-    BasicAntiCheatBypass taken out of the 
-    original script so it may not work as intended
-
-    - Stats:GetTotalMemoryUsageMb
-    - gcinfo
-    - ContentProvider:PreloadAsync 
-    - BasicAntiCheatBypass (getproperties)
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local Memory = {}

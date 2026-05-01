@@ -1,10 +1,7 @@
 --!strict
 --[[
     Rnox/modules/network.luau
-    - Webhook loggers (attempts DELETE payback if enabled)
-    - Discord auto-join RPC
-    - Roblox API endpoint access
-    - HttpPost
+    - https://github.com/audio-wav/Rnox/wiki
 ]]
 
 local Network = {}
