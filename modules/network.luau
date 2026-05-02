@@ -16,8 +16,8 @@ function Network:Init(Core: any): ()
     local StringMatch = Core.StringMatch
     local StringSub = Core.StringSub
     local StringLower = Core.StringLower
-    local StringRep = Core.CloneFunction(string.rep)
-    local ToStr = Core.CloneFunction(tostring)
+    local StringRep = Core.StringRep
+    local ToStr = Core.ToStr
     local HttpService = Core.HttpService
     local RawTrusted: {string} = Settings.TrustedDomains or {}
     local TrustedDomains: {string} = table.freeze(table.clone(RawTrusted))

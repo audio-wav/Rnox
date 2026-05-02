@@ -15,8 +15,8 @@ local function Build(Settings)
     local Watched: {any} = {}
     local RawCloneFunction: typeof(clonefunction) = Missing("function", clonefunction, function(...) return ... end)
     local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
-    local CloneFunction: typeof(clonefunction) = function(fn: any): any
-        local Cloned = RawCloneFunction(fn)
+    local CloneFunction: typeof(clonefunction) = function(Function: any): any
+        local Cloned = RawCloneFunction(Function)
         Watched[#Watched + 1] = Cloned
         return Cloned
     end
@@ -24,7 +24,7 @@ local function Build(Settings)
         return RawCloneReference(ref)
     end
     local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
-    local IsFunctionHooked: ((fn: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
     local HookMetamethod = Missing("function", hookmetamethod)
     local HookFunction = Missing("function", hookfunction)
     local CheckCaller = Missing("function", checkcaller, function() return true end)
@@ -62,7 +62,7 @@ local function Build(Settings)
     if RawRequest then
         local SafeRawRequest = CloneFunction(RawRequest)
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            if GetMetatable(opts) ~= nil then
+            if GetMetatable(opts) then
                 return
             end
 
@@ -79,13 +79,17 @@ local function Build(Settings)
             })
         end)
     end
+    local RawEqual = CloneFunction(rawequal)
     local StringFind = CloneFunction(string.find)
+    local StringRep = CloneFunction(string.rep)
     local StringMatch = CloneFunction(string.match)
     local StringSub = CloneFunction(string.sub)
     local StringUpper = CloneFunction(string.upper)
     local StringLower = CloneFunction(string.lower)
     local StringFormat = CloneFunction(string.format)
+    local ToStr = CloneFunction(tostring)
     local TableInsert = CloneFunction(table.insert)
+    local TableRemove = CloneFunction(table.remove)
     local MathRandom = CloneFunction(math.random)
     local ProtectedCall = CloneFunction(pcall)
     local Game = CloneReference(game)
@@ -98,17 +102,19 @@ local function Build(Settings)
     local LogService = CloneReference(Game:GetService("LogService"))
     local TextChatService = CloneReference(Game:GetService("TextChatService"))
     local ReplicatedStorage = CloneReference(Game:GetService("ReplicatedStorage"))
+    local RunService = CloneReference(Game:GetService("RunService"))
     local LocalPlayer = Players.LocalPlayer
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    table.freeze(Watched)
 
     local Rnox = {
         SetAll = function(_self: any, Value: boolean): ()
             for Key, Setting in next, Settings do
-                if type(Setting) == "table" then
+                if RawEqual(type(Setting), "table") then
                     for SubKey in next, Setting do
                         Settings[Key][SubKey] = Value
                     end
-                elseif type(Setting) == "boolean" then
+                elseif RawEqual(type(Setting), "boolean") then
                     Settings[Key] = Value
                 end
             end
@@ -150,23 +156,80 @@ local function Build(Settings)
         end
     end
 
-    if IsFunctionHooked then
-        for _, fn in next, Watched do
-            if IsFunctionHooked(fn) then
-                ProtectedCall(function()
-                    for i = 1, 3 do
+    if GetGarbageCollection then
+        local RawGetGC = RawCloneFunction(getgc)
+        local RawFilterGC = RawCloneFunction(filtergc)
+        HookFunction(getgc, NewCClosure(function(...): any
+            local Results = RawGetGC(...)
+            for i = #Results, 1, -1 do
+                if RawEqual(Results[i], RawHookFunction) then
+                    TableRemove(Results, i)
+                end
+            end
+            return Results
+        end))
+
+        if filtergc then
+            HookFunction(filtergc, NewCClosure(function(Type: string, Options: any, Single: boolean?): any
+                local Results = RawFilterGC(Type, Options, Single)
+                if Single then
+                    if RawEqual(Results, RawHookFunction) then
+                        return nil
+                    end
+                    return Results
+                else
+                    for i = #Results, 1, -1 do
+                        if RawEqual(Results[i], RawHookFunction) then
+                            TableRemove(Results, i)
+                        end
+                    end
+                    return Results
+                end
+            end))
+        end
+    end
+
+    if HookFunction then
+        local RawHookFunction
+        RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
+            for _, Function in next, Watched do
+                if RawEqual(Function, Target) then
+                    ProtectedCall(function()
                         StarterGui:SetCore("SendNotification", {
                             Title = "Rnox Warning",
                             Text = "Rnox's Environment is being tampered with. You are at risk",
                             Button1 = "Leave the game",
                             Duration = math.huge,
                         })
-                    end
-                end)
-                break
+                    end)
+                    return Target
+                end
+            end
+            return RawHookFunction(Target, Replacement)
+        end))
+    end
+
+    task.spawn(function()
+        local Warned = false
+        while not Warned do
+            RunService.Heartbeat:Wait()
+            if not IsFunctionHooked then continue end
+            for _, fn in next, Watched do
+                if IsFunctionHooked(fn) then
+                    Warned = true
+                    ProtectedCall(function()
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "Rnox Warning",
+                            Text = "Rnox's Environment is being tampered with. You are at risk",
+                            Button1 = "Leave the game",
+                            Duration = math.huge,
+                        })
+                    end)
+                    break
+                end
             end
         end
-    end
+    end)
 
     return {
         Missing = Missing,
@@ -185,12 +248,15 @@ local function Build(Settings)
         HttpRequest = HttpRequest,
         RawGet = RawGet,
         StringFind = StringFind,
+        StringRep = StringRep,
         StringMatch = StringMatch,
         StringSub = StringSub,
         StringUpper = StringUpper,
         StringLower = StringLower,
         StringFormat = StringFormat,
+        ToStr = ToStr,
         TableInsert = TableInsert,
+        TableRemove = TableRemove,
         MathRandom = MathRandom,
         ProtectedCall = ProtectedCall,
         Game = Game,
@@ -201,6 +267,7 @@ local function Build(Settings)
         ContentProvider = ContentProvider,
         ScriptContext = ScriptContext,
         LogService = LogService,
+        RunService = RunService,
         TextChatService = TextChatService,
         ReplicatedStorage = ReplicatedStorage,
         LocalPlayer = LocalPlayer,
