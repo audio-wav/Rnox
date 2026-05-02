@@ -65,6 +65,30 @@ function Network:Init(Core: any): ()
                     return OriginalRequest(...)
                 end
                 local Url: string = Options.Url
+                local Hostname: string = StringLower(
+                    StringMatch(Url, "^[Hh][Tt][Tt][Pp][Ss]?://([^/?#:]*)") or
+                    StringMatch(Url, "^//([^/?#:]*)") or
+                    StringMatch(Url, "^([^/?#:]*)") or
+                    ""
+                )
+
+                local Trusted = false
+                for _, Entry in next, TrustedDomains do
+                    local EntryLower = StringLower(Entry)
+                    if Hostname == EntryLower then
+                        Trusted = true
+                        break
+                    end
+                    local Suffix = "." .. EntryLower
+                    if #Hostname > #Suffix and StringSub(Hostname, -#Suffix) == Suffix then
+                        Trusted = true
+                        break
+                    end
+                end
+                
+                if Trusted then
+                    return OriginalRequest(...)
+                end
                 if Settings.HttpLogger and Settings.HttpLogger.Enabled then
                     task.spawn(function(): ()
                         local LogText: string = "[HTTP] " .. Url

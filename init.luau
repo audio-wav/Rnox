@@ -71,6 +71,7 @@ type SettingsType = {
     AntiError: boolean,
     AntiMessage: boolean,
     AntiIdle: boolean,
+    TrustedDomains: {string},
 }
 
 type ModuleType = {
@@ -87,7 +88,7 @@ type CoreType = {
 }
 
 local Settings: SettingsType = {
-    Version = "1.5",
+    Version = "1.6",
     Output = warn,
     MaliciousNamecalls = {
         Enabled = true,
@@ -135,6 +136,7 @@ local Settings: SettingsType = {
     AntiError = true,
     AntiMessage = false,
     AntiIdle = true,
+    TrustedDomains = {} :: {string}, -- e.g. "example.com"
 }
 
 local RnoxBase: string = "https://raw.githubusercontent.com/audio-wav/Rnox/main/"
