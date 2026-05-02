@@ -6,6 +6,7 @@
 ]]
 
 local function Build(Settings)
+    table.freeze(Settings)
     local FrozenSettings = table.freeze(table.clone(Settings))
     local Missing = function(ValueType, Value, Fallback)
         return type(Value) == ValueType and Value or Fallback
@@ -25,6 +26,20 @@ local function Build(Settings)
     local GetCallingScript = Missing("function", getcallingscript)
     local GetGarbageCollection = Missing("function", getgc)
     local GetMetatable = CloneFunction(getmetatable)
+    if HookFunction and setreadonly then
+        local CopySetReadonly = CloneFunction(setreadonly)
+        HookFunction(setreadonly, NewCClosure(function(t, state)
+            if not CheckCaller() then return end
+            return CopySetReadonly(t, state)
+        end))
+    end
+    if HookFunction and debug and debug.getupvalue then
+        local CopyGetUpValue = CloneFunction(debug.getupvalue)
+        HookFunction(debug.getupvalue, NewCClosure(function(fn, idx)
+            if not CheckCaller() then return nil end
+            return CopyGetUpValue(fn, idx)
+        end))
+    end
     local IsExecutorClosure =
         Missing("function", isexecutorclosure)
         or Missing("function", is_synapse_function)
