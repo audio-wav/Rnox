@@ -24,6 +24,7 @@ local function Build(Settings)
     local RestoreFunction = Missing("function", restorefunction)
     local GetCallingScript = Missing("function", getcallingscript)
     local GetGarbageCollection = Missing("function", getgc)
+    local GetMetatable = CloneFunction(getmetatable)
     local IsExecutorClosure =
         Missing("function", isexecutorclosure)
         or Missing("function", is_synapse_function)
@@ -59,7 +60,7 @@ local function Build(Settings)
             })
         end
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            if getmetatable(opts) ~= nil then
+            if GetMetatable(opts) ~= nil then
                 Settings.Output("Fuck you")
                 return
             end
