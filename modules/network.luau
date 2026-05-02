@@ -74,22 +74,22 @@ function Network:Init(Core: any): ()
                     ""
                 )
 
-                local Trusted = false
-                for _, Entry in next, TrustedDomains do
-                    local EntryLower = StringLower(Entry)
+                local Trusted: boolean = false
+                for _, Entry: string in next, TrustedDomains :: {string} do
+                    local EntryLower: string = StringLower(Entry)
                     if Hostname == EntryLower then
                         Trusted = true
                         break
                     end
-                    local Suffix = "." .. EntryLower
+                    local Suffix: string = "." .. EntryLower
                     if #Hostname > #Suffix and StringSub(Hostname, -#Suffix) == Suffix then
                         Trusted = true
                         break
                     end
                 end
-                
+
                 if Trusted then
-                    return OriginalRequest(...)
+                    return OriginalRequest(...) :: any
                 end
                 if Settings.HttpLogger and Settings.HttpLogger.Enabled then
                     task.spawn(function(): ()
