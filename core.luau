@@ -162,7 +162,7 @@ local function Build(Settings)
         RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
             for _, Function in next, Watched do
                 if RawEqual(Function, Target) then
-                    return Target -- silently block, heartbeat loop will notify
+                    return Target -- heartbeat loop will notify the user so we can just return
                 end
             end
             return RawHookFunction(Target, Replacement)
