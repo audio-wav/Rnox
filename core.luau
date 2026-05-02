@@ -54,11 +54,14 @@ local function Build(Settings)
         local SafeRawRequest = CloneFunction(RawRequest)
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
             if GetMetatable(opts) ~= nil then
-                Settings.Output("Fuck you")
                 return
             end
+
             local url = RawGet(opts, "Url")
-            if type(url) ~= "string" then return end
+            if type(url) ~= "string" then 
+                return 
+            end
+
             return SafeRawRequest({
                 Url = url,
                 Method = RawGet(opts, "Method") or "GET",
@@ -90,7 +93,6 @@ local function Build(Settings)
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
     local Rnox = {}
-
     function Rnox:SetAll(Value: boolean): ()
         for Key, Setting in next, Settings do
             if type(Setting) == "table" then
@@ -115,17 +117,25 @@ local function Build(Settings)
     end
 
     local function Block(fn: ((...any) -> ...any)?, Handler: ((...any) -> ...any)?): ()
-        if not fn or not HookFunction then return end
+        if not fn or not HookFunction then 
+            return 
+        end
+
         local Copy = CloneFunction(fn)
         ProtectedCall(function(): ()
             HookFunction(fn, NewCClosure(function(...): ...any
-                if not CheckCaller() then return nil end
-                if Handler then return Handler(Copy, ...) end
+                if not CheckCaller() then
+                    return nil
+                end
+
+                if Handler then
+                    return Handler(Copy, ...)
+                end
                 return Copy(...)
             end))
         end)
     end
-    
+
     Block(RestoreFunction, function(_, fn) return fn end)
     Block(debug and debug.getupvalue)
     Block(debug and debug.info)
