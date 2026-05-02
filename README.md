@@ -4,6 +4,8 @@ An all-in-one tool for protecting users from malicious code [![](https://dcbadge
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/audio-wav/Rnox/main/init.luau"))()
 ```
+> [!CAUTION]
+> Rnox will always be *bypassable* due to its nature, bypasses will come and patches will come
 
 > [!NOTE]
 > For full documentation, and FAQs, check the wiki: https://github.com/audio-wav/Rnox/wiki
