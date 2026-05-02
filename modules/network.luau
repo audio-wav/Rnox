@@ -36,6 +36,8 @@ function Network:Init(Core: any): ()
     local StringFind = Core.StringFind
     local StringMatch = Core.StringMatch
     local HttpService = Core.HttpService
+    local RawTrusted: {string} = Settings.TrustedDomains or {}
+    local TrustedDomains: {string} = table.freeze(table.clone(RawTrusted))
     if not HookFunction or not HttpRequest then
         return
     end
