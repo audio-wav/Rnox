@@ -92,55 +92,54 @@ local function Build(Settings)
     local LocalPlayer = Players.LocalPlayer
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-    local Rnox = {}
-    function Rnox:SetAll(Value: boolean): ()
-        for Key, Setting in next, Settings do
-            if type(Setting) == "table" then
-                for SubKey in next, Setting do
-                    Settings[Key][SubKey] = Value
+    local Rnox = {
+        SetAll = function(_self: any, Value: boolean): ()
+            for Key, Setting in next, Settings do
+                if type(Setting) == "table" then
+                    for SubKey in next, Setting do
+                        Settings[Key][SubKey] = Value
+                    end
+                elseif type(Setting) == "boolean" then
+                    Settings[Key] = Value
                 end
-            elseif type(Setting) == "boolean" then
-                Settings[Key] = Value
             end
+        end,
+        Notify = function(_self: any, Title: string, Text: string): ()
+            ProtectedCall(function()
+                StarterGui:SetCore("SendNotification", {
+                    Title = Title,
+                    Text = Text,
+                    Button1 = "Okay!",
+                    Duration = 8,
+                })
+            end)
+        end,
+    }
+
+    for _, Arguments in next, {
+        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any if not CheckCaller() then return nil end return (select(2, ...)) end)},
+        {debug and debug.getupvalue},
+        {debug and debug.info},
+        {setreadonly},
+        {RawRequest},
+    } do
+        local Function: any = Arguments[1]
+        local Handler: any = Arguments[2]
+        if Function and HookFunction then
+            local Copy = CloneFunction(Function)
+            ProtectedCall(function(): ()
+                HookFunction(Function, NewCClosure(function(...): ...any
+                    if not CheckCaller() then
+                        return nil
+                    end
+                    if Handler then
+                        return Handler(Copy, ...)
+                    end
+                    return Copy(...)
+                end))
+            end)
         end
     end
-
-    function Rnox:Notify(Title: string, Text: string): ()
-        ProtectedCall(function()
-            StarterGui:SetCore("SendNotification", {
-                Title = Title,
-                Text = Text,
-                Button1 = "Okay!",
-                Duration = 8,
-            })
-        end)
-    end
-
-    local function Block(fn: ((...any) -> ...any)?, Handler: ((...any) -> ...any)?): ()
-        if not fn or not HookFunction then 
-            return 
-        end
-
-        local Copy = CloneFunction(fn)
-        ProtectedCall(function(): ()
-            HookFunction(fn, NewCClosure(function(...): ...any
-                if not CheckCaller() then
-                    return nil
-                end
-
-                if Handler then
-                    return Handler(Copy, ...)
-                end
-                return Copy(...)
-            end))
-        end)
-    end
-
-    Block(RestoreFunction, function(_, fn) return fn end)
-    Block(debug and debug.getupvalue)
-    Block(debug and debug.info)
-    Block(setreadonly)
-    Block(RawRequest)
 
     return {
         Missing = Missing,
