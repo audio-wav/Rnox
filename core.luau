@@ -52,14 +52,6 @@ local function Build(Settings)
     local HttpRequest: ((opts: RequestOptions) -> any)?
     if RawRequest then
         local SafeRawRequest = CloneFunction(RawRequest)
-        local function MakeRequest(url: string, method: string, headers: any, body: any)
-            return SafeRawRequest({
-                Url = url,
-                Method = method,
-                Headers = headers,
-                Body = body,
-            })
-        end
         HttpRequest = NewCClosure(function(opts: RequestOptions): any?
             if GetMetatable(opts) ~= nil then
                 Settings.Output("Fuck you")
@@ -67,7 +59,12 @@ local function Build(Settings)
             end
             local url = RawGet(opts, "Url")
             if type(url) ~= "string" then return end
-            return MakeRequest(url, RawGet(opts, "Method") or "GET", RawGet(opts, "Headers"), RawGet(opts, "Body"))
+            return SafeRawRequest({
+                Url = url,
+                Method = RawGet(opts, "Method") or "GET",
+                Headers = RawGet(opts, "Headers"),
+                Body = RawGet(opts, "Body"),
+            })
         end)
     end
     local StringFind = CloneFunction(string.find)
