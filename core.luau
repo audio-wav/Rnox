@@ -12,10 +12,19 @@ local function Build(Settings)
         return type(Value) == ValueType and Value or Fallback
     end :: (<T>(ValueType: string, Value: T?, Fallback: T) -> T)
          & (<T>(ValueType: string, Value: T?) -> T?)
-
-    local CloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
-    local CloneFunction: typeof(clonefunction) = Missing("function", clonefunction, function(...) return ... end)
+    local Watched: {any} = {}
+    local RawCloneFunction: typeof(clonefunction) = Missing("function", clonefunction, function(...) return ... end)
+    local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
+    local CloneFunction: typeof(clonefunction) = function(fn: any): any
+        local Cloned = RawCloneFunction(fn)
+        Watched[#Watched + 1] = Cloned
+        return Cloned
+    end
+    local CloneReference: typeof(cloneref) = function(ref: any): any
+        return RawCloneReference(ref)
+    end
     local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
+    local IsFunctionHooked: ((fn: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
     local HookMetamethod = Missing("function", hookmetamethod)
     local HookFunction = Missing("function", hookfunction)
     local CheckCaller = Missing("function", checkcaller, function() return true end)
@@ -138,6 +147,24 @@ local function Build(Settings)
                     return Copy(...)
                 end))
             end)
+        end
+    end
+
+    if IsFunctionHooked then
+        for _, fn in next, Watched do
+            if IsFunctionHooked(fn) then
+                ProtectedCall(function()
+                    for i = 1, 3 do
+                        StarterGui:SetCore("SendNotification", {
+                            Title = "Rnox Warning",
+                            Text = "Rnox's Environment is being tampered with. You are at risk",
+                            Button1 = "Leave the game",
+                            Duration = math.huge,
+                        })
+                    end
+                end)
+                break
+            end
         end
     end
 
