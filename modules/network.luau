@@ -6,27 +6,6 @@
 ]]
 
 local Network = {}
-local function SerializeTable(
-    Table: {[any]: any},
-    Depth: number
-): string
-    local Indent: string = string.rep("\t", Depth)
-    local Result: string = "{\n" .. Indent
-    local Separator: string = ",\n" .. Indent
-    for Key: any, Value: any in next, Table do
-        if type(Value) == "table" then
-            Result ..= tostring(Key) .. " = "
-                .. SerializeTable(Value, Depth + 1)
-        else
-            Result ..= tostring(Key)
-                .. " = "
-                .. tostring(Value):gsub("\n", "")
-                .. Separator
-        end
-    end
-    return Result .. "\n" .. string.rep("\t", Depth - 1) .. "}"
-end
-
 function Network:Init(Core: any): ()
     local Settings = Core.Settings
     local HookFunction = Core.HookFunction
@@ -35,9 +14,27 @@ function Network:Init(Core: any): ()
     local HttpRequest = Core.HttpRequest
     local StringFind = Core.StringFind
     local StringMatch = Core.StringMatch
+    local StringSub = Core.StringSub
+    local StringLower = Core.StringLower
+    local StringRep = Core.CloneFunction(string.rep)
+    local ToStr = Core.CloneFunction(tostring)
     local HttpService = Core.HttpService
     local RawTrusted: {string} = Settings.TrustedDomains or {}
     local TrustedDomains: {string} = table.freeze(table.clone(RawTrusted))
+    local Serialize
+    Serialize = function(Table: {[any]: any}, Depth: number): string
+        local Indent: string = StringRep("\t", Depth)
+        local Result: string = "{\n" .. Indent
+        local Separator: string = ",\n" .. Indent
+        for Key: any, Value: any in next, Table do
+            if type(Value) == "table" then
+                Result ..= ToStr(Key) .. " = " .. Serialize(Value, Depth + 1)
+            else
+                Result ..= ToStr(Key) .. " = " .. (ToStr(Value):gsub("\n", "")) .. Separator
+            end
+        end
+        return Result .. "\n" .. StringRep("\t", Depth - 1) .. "}"
+    end
     if not HookFunction or not HttpRequest then
         return
     end
@@ -75,7 +72,7 @@ function Network:Init(Core: any): ()
                 )
 
                 local Trusted: boolean = false
-                for _, Entry: string in next, TrustedDomains :: {string} do
+                for _, Entry: string in next, TrustedDomains do
                     local EntryLower: string = StringLower(Entry)
                     if Hostname == EntryLower then
                         Trusted = true
@@ -98,13 +95,13 @@ function Network:Init(Core: any): ()
                             LogText ..= "\nMethod: " .. tostring(Options.Method)
                         end
                         if Settings.HttpLogger.ShowHeaders and Options.Headers then
-                            LogText ..= "\nHeaders:\n" .. SerializeTable(Options.Headers, 1)
+                            LogText ..= "\nHeaders:\n" .. Serialize(Options.Headers, 1)
                         end
                         if Settings.HttpLogger.ShowBody and Options.Body then
-                            local BodyText: string = tostring(Options.Body)
+                            local BodyText: string = ToStr(Options.Body)
                             ProtectedCall(function(): ()
                                 local Decoded: any = HttpService:JSONDecode(BodyText)
-                                BodyText = SerializeTable(Decoded, 1)
+                                BodyText = Serialize(Decoded, 1)
                             end)
                             LogText ..= "\nBody:\n" .. BodyText
                         end
@@ -120,7 +117,7 @@ function Network:Init(Core: any): ()
                                 HttpService:JSONDecode(Options.Body)
 
                             InfoText = "\nLogged info:\n"
-                                .. SerializeTable(Decoded, 1)
+                                .. Serialize(Decoded, 1)
                         end)
                     end
                     task.spawn(function(): ()
