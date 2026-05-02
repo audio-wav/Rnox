@@ -26,20 +26,6 @@ local function Build(Settings)
     local GetCallingScript = Missing("function", getcallingscript)
     local GetGarbageCollection = Missing("function", getgc)
     local GetMetatable = CloneFunction(getmetatable)
-    if HookFunction and setreadonly then
-        local CopySetReadonly = CloneFunction(setreadonly)
-        HookFunction(setreadonly, NewCClosure(function(t, state)
-            if not CheckCaller() then return end
-            return CopySetReadonly(t, state)
-        end))
-    end
-    if HookFunction and debug and debug.getupvalue then
-        local CopyGetUpValue = CloneFunction(debug.getupvalue)
-        HookFunction(debug.getupvalue, NewCClosure(function(fn, idx)
-            if not CheckCaller() then return nil end
-            return CopyGetUpValue(fn, idx)
-        end))
-    end
     local IsExecutorClosure =
         Missing("function", isexecutorclosure)
         or Missing("function", is_synapse_function)
@@ -84,7 +70,6 @@ local function Build(Settings)
             return MakeRequest(url, RawGet(opts, "Method") or "GET", RawGet(opts, "Headers"), RawGet(opts, "Body"))
         end)
     end
-
     local StringFind = CloneFunction(string.find)
     local StringMatch = CloneFunction(string.match)
     local StringSub = CloneFunction(string.sub)
@@ -132,15 +117,23 @@ local function Build(Settings)
         end)
     end
 
-    local function BlockRestore(OriginalRestore: ((fn: (...any) -> ...any, ...any) -> (...any) -> ...any)?): ()
-        if not OriginalRestore or not HookFunction then return end
+    local function Block(fn: ((...any) -> ...any)?, Handler: ((...any) -> ...any)?): ()
+        if not fn or not HookFunction then return end
+        local Copy = CloneFunction(fn)
         ProtectedCall(function(): ()
-            HookFunction(OriginalRestore, NewCClosure(function(fn: (...any) -> ...any, ...: any): (...any) -> ...any
-                return fn
+            HookFunction(fn, NewCClosure(function(...): ...any
+                if not CheckCaller() then return nil end
+                if Handler then return Handler(Copy, ...) end
+                return Copy(...)
             end))
         end)
     end
-    BlockRestore(RestoreFunction)
+    
+    Block(RestoreFunction, function(_, fn) return fn end)
+    Block(debug and debug.getupvalue)
+    Block(debug and debug.info)
+    Block(setreadonly)
+    Block(RawRequest)
 
     return {
         Missing = Missing,
