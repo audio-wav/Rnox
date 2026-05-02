@@ -105,7 +105,6 @@ local function Build(Settings)
     local RunService = CloneReference(Game:GetService("RunService"))
     local LocalPlayer = Players.LocalPlayer
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    table.freeze(Watched)
 
     local Rnox = {
         SetAll = function(_self: any, Value: boolean): ()
@@ -155,6 +154,8 @@ local function Build(Settings)
             end)
         end
     end
+
+    table.freeze(Watched)
 
     if GetGarbageCollection then
         local RawGetGC = RawCloneFunction(getgc)
