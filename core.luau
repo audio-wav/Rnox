@@ -157,6 +157,18 @@ local function Build(Settings)
 
     table.freeze(Watched)
 
+    local RawHookFunction: ((...any) -> ...any)?
+    if HookFunction then
+        RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
+            for _, Function in next, Watched do
+                if RawEqual(Function, Target) then
+                    return Target -- silently block, heartbeat loop will notify
+                end
+            end
+            return RawHookFunction(Target, Replacement)
+        end))
+    end
+
     if GetGarbageCollection then
         local RawGetGC = RawCloneFunction(getgc)
         local RawFilterGC = RawCloneFunction(filtergc)
@@ -188,26 +200,6 @@ local function Build(Settings)
                 end
             end))
         end
-    end
-
-    if HookFunction then
-        local RawHookFunction
-        RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
-            for _, Function in next, Watched do
-                if RawEqual(Function, Target) then
-                    ProtectedCall(function()
-                        StarterGui:SetCore("SendNotification", {
-                            Title = "Rnox Warning",
-                            Text = "Rnox's Environment is being tampered with. You are at risk",
-                            Button1 = "Leave the game",
-                            Duration = math.huge,
-                        })
-                    end)
-                    return Target
-                end
-            end
-            return RawHookFunction(Target, Replacement)
-        end))
     end
 
     task.spawn(function()
