@@ -23,7 +23,7 @@ local function Build(Settings)
         return RawCloneReference(ref)
     end
     local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
-    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
     local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod)
     local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction)
     local CheckCaller: () -> boolean = CloneFunction(
@@ -107,7 +107,7 @@ local function Build(Settings)
         end)
     end
 
-
+    local RnoxHooked: {[any]: boolean} = {}
     local Rnox = {
         SetAll = function(_self: any, Value: boolean): ()
             for Key, Setting in next, Settings do
@@ -165,16 +165,17 @@ local function Build(Settings)
         if Function and HookFunction then
             local Copy = CloneFunction(Function)
             ProtectedCall(function(): ()
-                HookFunction(Function, NewCClosure(function(...): ...any
-                    if not CheckCaller() then
-                        return nil
-                    end
-                    if Handler then
-                        return Handler(Copy, ...)
-                    end
-                    return Copy(...)
-                end))
-            end)
+            HookFunction(Function, NewCClosure(function(...): ...any
+                if not CheckCaller() then
+                    return nil
+                end
+                if Handler then
+                    return Handler(Copy, ...)
+                end
+                return Copy(...)
+            end))
+            RnoxHooked[Function] = true
+        end)
         end
     end
 
@@ -193,6 +194,7 @@ local function Build(Settings)
     if GetGarbageCollection then
         local RawGetGC: (...any) -> {any} = CloneFunction(getgc)
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
+        table.freeze(RnoxHooked)
         table.freeze(Watched)
         local ProtectedFunctions: {[any]: boolean} = {}
         ProtectedFunctions[RawHookFunction] = true
