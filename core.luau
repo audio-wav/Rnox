@@ -156,6 +156,7 @@ local function Build(Settings)
             return Copy(Object, Mt, ...) 
         end)},
         {queueonteleport, NewCClosure(function(Copy: any, ...: any): any
+            FrozenSettings.Output("[Rnox Info] queueonteleport Blocked: " .. ToStr(...))
             Copy()
             return nil
         end)},
