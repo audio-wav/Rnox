@@ -6,7 +6,6 @@
 ]]
 
 local function Build(Settings)
-    table.freeze(Settings)
     local FrozenSettings = table.freeze(table.clone(Settings))
     local Missing = function(ValueType, Value, Fallback)
         return type(Value) == ValueType and Value or Fallback
@@ -17,7 +16,7 @@ local function Build(Settings)
     local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
     local CloneFunction: typeof(clonefunction) = function(Function: any): any
         local Cloned = RawCloneFunction(Function)
-        Watched[#Watched + 1] = Cloned
+        Watched[#Watched + 1] = Chttps://raw.githubusercontent.com/audio-wav/Rnox/main/init.luauloned
         return Cloned
     end
     local CloneReference: typeof(cloneref) = function(ref: any): any
@@ -262,7 +261,7 @@ local function Build(Settings)
         end
     end)
 
-    return table.freeze({
+    return {
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
@@ -307,7 +306,7 @@ local function Build(Settings)
         Character = Character,
         Settings = FrozenSettings,
         Rnox = Rnox
-    })
+    }
 end
 
 return { Build = Build }
