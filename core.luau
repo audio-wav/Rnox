@@ -133,7 +133,12 @@ local function Build(Settings)
     }
 
     for _, Arguments in next, {
-        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any if not CheckCaller() then return nil end return (select(2, ...)) end)},
+        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any 
+            if not CheckCaller() then 
+                return nil 
+            end 
+            return (select(2, ...)) 
+        end)},
         {debug and debug.getupvalue},
         {debug and debug.info},
         {setreadonly},
@@ -141,8 +146,17 @@ local function Build(Settings)
         {getupvalues},
         {setupvalue},
         {debug and debug.getupvalues},
-        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then return nil end return Copy(Object, Mt, ...) end)},
-    } do
+        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any 
+            if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then 
+                return nil 
+            end 
+            return Copy(Object, Mt, ...) 
+        end)},
+        {queueonteleport, NewCClosure(function(Copy: any, ...: any): any
+            Copy()
+            return nil
+        end)},
+} do
         local Function: any = Arguments[1]
         local Handler: any = Arguments[2]
         if Function and HookFunction then
