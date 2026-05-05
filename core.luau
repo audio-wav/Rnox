@@ -243,7 +243,7 @@ local function Build(Settings)
             RunService.Heartbeat:Wait()
             if not IsFunctionHooked then continue end
             for _, Function: any in next, Watched do
-                if IsFunctionHooked(Function) then
+                if IsFunctionHooked(Function) and not RnoxHooked[Function] then
                     Warned = true
                     local Success: boolean = ProtectedCall(function()
                         StarterGui:SetCore("SendNotification", {
