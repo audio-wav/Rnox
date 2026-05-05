@@ -122,7 +122,7 @@ local function Build(Settings)
             end
         end,
         Notify = function(_self: any, Title: string, Text: string): ()
-            ProtectedCall(function()
+            local Success: boolean = ProtectedCall(function(): ()
                 StarterGui:SetCore("SendNotification", {
                     Title = Title,
                     Text = Text,
@@ -130,6 +130,9 @@ local function Build(Settings)
                     Duration = 8,
                 })
             end)
+            if not Success then
+                FrozenSettings.Output(StringFormat("[Rnox Info] %s - %s", Title, Text))
+            end
         end,
     }
 
@@ -251,7 +254,7 @@ local function Build(Settings)
                         })
                     end)
                     if not Success then
-                        FrozenSettings.Output("Rnox is tampered")
+                        FrozenSettings.Output("[Rnox Warning] Rnox's Environment is being tampered with. You are at risk and should leave the game")
                     end
                     break
                 end
