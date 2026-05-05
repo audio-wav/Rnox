@@ -61,6 +61,7 @@ local function Build(Settings)
     local StringUpper: typeof(string.upper) = CloneFunction(string.upper)
     local StringLower: typeof(string.lower) = CloneFunction(string.lower)
     local StringFormat: typeof(string.format) = CloneFunction(string.format)
+    local TaskSpawn: typeof(task.spawn) = CloneFunction(task.spawn)
     local ToStr: typeof(tostring) = CloneFunction(tostring)
     local TableInsert: typeof(table.insert) = CloneFunction(table.insert)
     local TableRemove: typeof(table.remove) = CloneFunction(table.remove)
@@ -233,7 +234,7 @@ local function Build(Settings)
         end
     end
 
-    task.spawn(function()
+    TaskSpawn(function()
         local Warned: boolean = false
         while not Warned do
             RunService.Heartbeat:Wait()
@@ -241,7 +242,7 @@ local function Build(Settings)
             for _, Function: any in next, Watched do
                 if IsFunctionHooked(Function) then
                     Warned = true
-                    ProtectedCall(function()
+                    local Success: boolean = ProtectedCall(function()
                         StarterGui:SetCore("SendNotification", {
                             Title = "Rnox Warning",
                             Text = "Rnox's Environment is being tampered with. You are at risk",
@@ -249,13 +250,16 @@ local function Build(Settings)
                             Duration = math.huge,
                         })
                     end)
+                    if not Success then
+                        FrozenSettings.Output("Rnox is tampered")
+                    end
                     break
                 end
             end
         end
     end)
 
-    return {
+    return table.freeze({
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
@@ -300,7 +304,7 @@ local function Build(Settings)
         Character = Character,
         Settings = FrozenSettings,
         Rnox = Rnox
-    }
+    })
 end
 
 return { Build = Build }
