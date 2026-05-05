@@ -23,7 +23,7 @@ local function Build(Settings)
         return RawCloneReference(ref)
     end
     local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
-    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
     local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod)
     local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction)
     local CheckCaller: () -> boolean = CloneFunction(
