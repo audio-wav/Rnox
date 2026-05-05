@@ -156,8 +156,7 @@ local function Build(Settings)
             return Copy(Object, Mt, ...) 
         end)},
         {queueonteleport, NewCClosure(function(Copy: any, ...: any): any
-            local Source = ToStr(...)
-            Copy("print('[Rnox Info] queueonteleport Blocked')\n" .. Source)
+            Copy("print('[Rnox Info] queueonteleport Blocked')")
             return nil
         end)},
 } do
