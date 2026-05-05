@@ -24,74 +24,49 @@ local function Build(Settings)
         return RawCloneReference(ref)
     end
     local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
-    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and RawCloneFunction(isfunctionhooked)
-    local HookMetamethod = Missing("function", hookmetamethod)
-    local HookFunction = Missing("function", hookfunction)
-    local CheckCaller = Missing("function", checkcaller, function() return true end)
-    local GetNamecallMethod = Missing("function", getnamecallmethod)
-    local GetConnections = Missing("function", getconnections)
-    local GetProperties = Missing("function", getproperties)
-    local RestoreFunction = Missing("function", restorefunction)
-    local GetCallingScript = Missing("function", getcallingscript)
-    local GetGarbageCollection = Missing("function", getgc)
-    local GetMetatable = CloneFunction(getmetatable)
-    local IsExecutorClosure =
-        Missing("function", isexecutorclosure)
-        or Missing("function", is_synapse_function)
-        or Missing("function", iskrnlclosure)
-        or Missing("function", issentinelclosure)
-        or Missing("function", is_protosmasher_closure)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
+    local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod)
+    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction)
+    local CheckCaller: () -> boolean = CloneFunction(
+        Missing("function", checkcaller, function() return true end)
+    )
+    local GetNamecallMethod: (() -> string)? = Missing("function", getnamecallmethod) and CloneFunction(getnamecallmethod)
+    local GetConnections: ((Signal: RBXScriptSignal) -> {RBXScriptConnection})? = Missing("function", getconnections) and CloneFunction(getconnections)
+    local GetProperties: ((Instance: Instance) -> {[string]: any})? = Missing("function", getproperties) and CloneFunction(getproperties)
+    local RestoreFunction: typeof(restorefunction)? = Missing("function", restorefunction) and CloneFunction(restorefunction)
+    local GetCallingScript: (() -> Instance?)? = Missing("function", getcallingscript) and CloneFunction(getcallingscript)
+    local GetGarbageCollection: ((...any) -> {any})? = Missing("function", getgc) and CloneFunction(getgc)
+    local GetMetatable: typeof(getmetatable) = CloneFunction(getmetatable)
+    local IsExecutorClosure: ((Function: any) -> boolean) =
+        (Missing("function", isexecutorclosure) and CloneFunction(isexecutorclosure))
+        or (Missing("function", is_synapse_function) and CloneFunction(is_synapse_function))
+        or (Missing("function", iskrnlclosure) and CloneFunction(iskrnlclosure))
+        or (Missing("function", issentinelclosure) and CloneFunction(issentinelclosure))
+        or (Missing("function", is_protosmasher_closure) and CloneFunction(is_protosmasher_closure))
         or function() return false end
-    local RawGet = CloneFunction(rawget)
-    local RawRequest =
-        Missing("function", request)
-        or Missing("function", http_request)
-        or (typeof(syn) == "table" and Missing("function", syn.request))
-        or (typeof(http) == "table" and Missing("function", http.request))
-        or (typeof(fluxus) == "table" and Missing("function", fluxus.request))
+    local RawGet: typeof(rawget) = CloneFunction(rawget)
+    local RawSet: typeof(rawset) = CloneFunction(rawset)
+    local RawEqual: typeof(rawequal) = CloneFunction(rawequal)
+    local RawRequest: ((...any) -> any)? =
+        (Missing("function", request) and CloneFunction(request))
+        or (Missing("function", http_request) and CloneFunction(http_request))
+        or (typeof(syn) == "table" and Missing("function", syn.request) and CloneFunction(syn.request))
+        or (typeof(http) == "table" and Missing("function", http.request) and CloneFunction(http.request))
+        or (typeof(fluxus) == "table" and Missing("function", fluxus.request) and CloneFunction(fluxus.request))
         or nil
-
-    type RequestOptions = {
-        Url: string,
-        Method: string?,
-        Headers: {[string]: string}?,
-        Body: string?,
-    }
-
-    local HttpRequest: ((opts: RequestOptions) -> any)?
-    if RawRequest then
-        local SafeRawRequest = CloneFunction(RawRequest)
-        HttpRequest = NewCClosure(function(opts: RequestOptions): any?
-            if GetMetatable(opts) then
-                return
-            end
-
-            local url = RawGet(opts, "Url")
-            if type(url) ~= "string" then 
-                return 
-            end
-
-            return SafeRawRequest({
-                Url = url,
-                Method = RawGet(opts, "Method") or "GET",
-                Headers = RawGet(opts, "Headers"),
-                Body = RawGet(opts, "Body"),
-            })
-        end)
-    end
-    local RawEqual = CloneFunction(rawequal)
-    local StringFind = CloneFunction(string.find)
-    local StringRep = CloneFunction(string.rep)
-    local StringMatch = CloneFunction(string.match)
-    local StringSub = CloneFunction(string.sub)
-    local StringUpper = CloneFunction(string.upper)
-    local StringLower = CloneFunction(string.lower)
-    local StringFormat = CloneFunction(string.format)
-    local ToStr = CloneFunction(tostring)
-    local TableInsert = CloneFunction(table.insert)
-    local TableRemove = CloneFunction(table.remove)
-    local MathRandom = CloneFunction(math.random)
-    local ProtectedCall = CloneFunction(pcall)
+    local StringFind: typeof(string.find) = CloneFunction(string.find)
+    local StringRep: typeof(string.rep) = CloneFunction(string.rep)
+    local StringMatch: typeof(string.match) = CloneFunction(string.match)
+    local StringSub: typeof(string.sub) = CloneFunction(string.sub)
+    local StringUpper: typeof(string.upper) = CloneFunction(string.upper)
+    local StringLower: typeof(string.lower) = CloneFunction(string.lower)
+    local StringFormat: typeof(string.format) = CloneFunction(string.format)
+    local ToStr: typeof(tostring) = CloneFunction(tostring)
+    local TableInsert: typeof(table.insert) = CloneFunction(table.insert)
+    local TableRemove: typeof(table.remove) = CloneFunction(table.remove)
+    local MathRandom: typeof(math.random) = CloneFunction(math.random)
+    local ProtectedCall: typeof(pcall) = CloneFunction(pcall)
+    local SetMetatable: typeof(setmetatable) = CloneFunction(setmetatable)
     local Game = CloneReference(game)
     local Players = CloneReference(Game:GetService("Players"))
     local StarterGui = CloneReference(Game:GetService("StarterGui"))
@@ -105,6 +80,33 @@ local function Build(Settings)
     local RunService = CloneReference(Game:GetService("RunService"))
     local LocalPlayer = Players.LocalPlayer
     local Character: Model = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    type RequestOptions = {
+        Url: string,
+        Method: string?,
+        Headers: {[string]: string}?,
+        Body: string?,
+    }
+
+    local HttpRequest: ((opts: RequestOptions) -> any)?
+    if RawRequest then
+        HttpRequest = NewCClosure(function(opts: RequestOptions): any?
+            if GetMetatable(opts) then
+                return
+            end
+            local url: any = RawGet(opts, "Url")
+            if type(url) ~= "string" then
+                return
+            end
+            return RawRequest({
+                Url = url,
+                Method = RawGet(opts, "Method") or "GET",
+                Headers = RawGet(opts, "Headers"),
+                Body = RawGet(opts, "Body"),
+            })
+        end)
+    end
+
 
     local Rnox = {
         SetAll = function(_self: any, Value: boolean): ()
@@ -136,6 +138,10 @@ local function Build(Settings)
         {debug and debug.info},
         {setreadonly},
         {RawRequest},
+        {getupvalues},
+        {setupvalue},
+        {debug and debug.getupvalues},
+        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then return nil end return Copy(Object, Mt, ...) end)},
     } do
         local Function: any = Arguments[1]
         local Handler: any = Arguments[2]
@@ -162,7 +168,7 @@ local function Build(Settings)
         RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
             for _, Function in next, Watched do
                 if RawEqual(Function, Target) then
-                    return Target -- heartbeat loop will notify the user so we can just return
+                    return Target
                 end
             end
             return RawHookFunction(Target, Replacement)
@@ -170,45 +176,56 @@ local function Build(Settings)
     end
 
     if GetGarbageCollection then
-        local RawGetGC = RawCloneFunction(getgc)
-        local RawFilterGC = RawCloneFunction(filtergc)
-        HookFunction(getgc, NewCClosure(function(...): any
-            local Results = RawGetGC(...)
-            for i = #Results, 1, -1 do
-                if RawEqual(Results[i], RawHookFunction) then
-                    TableRemove(Results, i)
-                end
-            end
-            return Results
-        end))
+        local RawGetGC: (...any) -> {any} = CloneFunction(getgc)
+        local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
+        local ProtectedFunctions: {[any]: boolean} = {}
+        ProtectedFunctions[RawHookFunction] = true
+        ProtectedFunctions[RawGetGC] = true
+        if RawFilterGC then
+            ProtectedFunctions[RawFilterGC] = true
+        end
+        for _, Function: any in next, Watched do
+            ProtectedFunctions[Function] = true
+        end
+        table.freeze(ProtectedFunctions)
 
-        if filtergc then
-            HookFunction(filtergc, NewCClosure(function(Type: string, Options: any, Single: boolean?): any
-                local Results = RawFilterGC(Type, Options, Single)
-                if Single then
-                    if RawEqual(Results, RawHookFunction) then
-                        return nil
+        ProtectedCall(function(): ()
+            HookFunction(getgc, NewCClosure(function(...: any): {any}
+                local Results: {any} = RawGetGC(...)
+                for i: number = #Results, 1, -1 do
+                    if ProtectedFunctions[Results[i]] then
+                        TableRemove(Results, i)
                     end
-                    return Results
-                else
-                    for i = #Results, 1, -1 do
-                        if RawEqual(Results[i], RawHookFunction) then
+                end
+                return Results
+            end))
+        end)
+
+        if filtergc and RawFilterGC then
+            ProtectedCall(function(): ()
+                HookFunction(filtergc, NewCClosure(function(Type: string, Options: any, Single: boolean?): any
+                    local Results: any = RawFilterGC(Type, Options, Single)
+                    if Single then
+                        return ProtectedFunctions[Results] and nil or Results
+                    end
+                    for i: number = #Results, 1, -1 do
+                        if ProtectedFunctions[Results[i]] then
                             TableRemove(Results, i)
                         end
                     end
                     return Results
-                end
-            end))
+                end))
+            end)
         end
     end
 
     task.spawn(function()
-        local Warned = false
+        local Warned: boolean = false
         while not Warned do
             RunService.Heartbeat:Wait()
             if not IsFunctionHooked then continue end
-            for _, fn in next, Watched do
-                if IsFunctionHooked(fn) then
+            for _, Function: any in next, Watched do
+                if IsFunctionHooked(Function) then
                     Warned = true
                     ProtectedCall(function()
                         StarterGui:SetCore("SendNotification", {
@@ -240,6 +257,7 @@ local function Build(Settings)
         IsExecutorClosure = IsExecutorClosure,
         HttpRequest = HttpRequest,
         RawGet = RawGet,
+        RawSet = RawSet,
         StringFind = StringFind,
         StringRep = StringRep,
         StringMatch = StringMatch,
@@ -252,6 +270,7 @@ local function Build(Settings)
         TableRemove = TableRemove,
         MathRandom = MathRandom,
         ProtectedCall = ProtectedCall,
+        SetMetatable = SetMetatable,
         Game = Game,
         Players = Players,
         StarterGui = StarterGui,
