@@ -88,7 +88,7 @@ type CoreType = {
 }
 
 local Settings: SettingsType = {
-    Version = "1.6",
+    Version = "1.7",
     Output = warn,
     MaliciousNamecalls = {
         Enabled = true,
