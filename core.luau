@@ -16,7 +16,7 @@ local function Build(Settings)
     local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
     local CloneFunction: typeof(clonefunction) = function(Function: any): any
         local Cloned = RawCloneFunction(Function)
-        Watched[#Watched + 1] = Chttps://raw.githubusercontent.com/audio-wav/Rnox/main/init.luauloned
+        Watched[#Watched + 1] = Cloned
         return Cloned
     end
     local CloneReference: typeof(cloneref) = function(ref: any): any
