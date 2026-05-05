@@ -178,8 +178,6 @@ local function Build(Settings)
         end
     end
 
-    table.freeze(Watched)
-
     local RawHookFunction: ((...any) -> ...any)?
     if HookFunction then
         RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
@@ -195,6 +193,7 @@ local function Build(Settings)
     if GetGarbageCollection then
         local RawGetGC: (...any) -> {any} = CloneFunction(getgc)
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
+        table.freeze(Watched)
         local ProtectedFunctions: {[any]: boolean} = {}
         ProtectedFunctions[RawHookFunction] = true
         ProtectedFunctions[RawGetGC] = true
@@ -261,7 +260,7 @@ local function Build(Settings)
         end
     end)
 
-    return {
+    return table.freeze({
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
@@ -306,7 +305,7 @@ local function Build(Settings)
         Character = Character,
         Settings = FrozenSettings,
         Rnox = Rnox
-    }
+    })
 end
 
 return { Build = Build }
