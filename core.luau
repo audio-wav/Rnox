@@ -13,26 +13,32 @@ local function Build(Settings)
          & (<T>(ValueType: string, Value: T?) -> T?)
     local Watched: {any} = {}
     local RawCloneFunction: typeof(clonefunction) = Missing("function", clonefunction, function(...) return ... end)
-    local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
+    local CloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
     local CloneFunction: typeof(clonefunction) = function(Function: any): any
+        return RawCloneFunction(Function)
+    end
+    local WatchedCloneFunction = function(Function: any): any
         local Cloned = RawCloneFunction(Function)
         Watched[#Watched + 1] = Cloned
         return Cloned
     end
-    local CloneReference: typeof(cloneref) = function(ref: any): any
-        return RawCloneReference(ref)
+    local RawNewCClosure: typeof(newcclosure) = WatchedCloneFunction(
+        Missing("function", newcclosure, function(Function) return Function end)
+    )
+    local NewCClosure: typeof(newcclosure) = function(Function: any): any
+        local Closure: any = RawNewCClosure(Function)
+        Watched[#Watched + 1] = Closure
+        return Closure
     end
-    local NewCClosure: typeof(newcclosure) = Missing("function", newcclosure, function(Function) return Function end)
-    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
-    local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod)
-    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and WatchedCloneFunction(isfunctionhooked)
+    local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod) and WatchedCloneFunction(hookmetamethod) or nil
+    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction) and WatchedCloneFunction(hookfunction)
     local CheckCaller: () -> boolean = CloneFunction(
         Missing("function", checkcaller, function() return true end)
     )
     local GetNamecallMethod: (() -> string)? = Missing("function", getnamecallmethod) and CloneFunction(getnamecallmethod)
     local GetConnections: ((Signal: RBXScriptSignal) -> {RBXScriptConnection})? = Missing("function", getconnections) and CloneFunction(getconnections)
     local GetProperties: ((Instance: Instance) -> {[string]: any})? = Missing("function", getproperties) and CloneFunction(getproperties)
-    local RestoreFunction: typeof(restorefunction)? = Missing("function", restorefunction) and CloneFunction(restorefunction)
     local GetCallingScript: (() -> Instance?)? = Missing("function", getcallingscript) and CloneFunction(getcallingscript)
     local GetGarbageCollection: ((...any) -> {any})? = Missing("function", getgc) and CloneFunction(getgc)
     local GetMetatable: typeof(getmetatable) = CloneFunction(getmetatable)
@@ -135,37 +141,59 @@ local function Build(Settings)
         end,
     }
 
+    local WatchedHookFunction: ((...any) -> ...any)?
+    if HookFunction then
+        RnoxHooked[HookFunction] = true
+        WatchedHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
+            for _, Closure: any in next, Watched do
+                if RawEqual(Closure, Target) then
+                    return Target
+                end
+            end
+            return WatchedHookFunction(Target, Replacement)
+        end))
+    end
+
+    if HookMetamethod and HookFunction then
+        ProtectedCall(function(): ()
+            HookFunction(hookmetamethod, NewCClosure(function(Object: any, Method: any, Replacement: any): any
+                if not CheckCaller() then
+                    return nil
+                end
+                return HookMetamethod(Object, Method, Replacement)
+            end))
+        end)
+    end
+
     for _, Arguments in next, {
-        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any 
-            if not CheckCaller() then 
-                return nil 
-            end 
-            return (select(2, ...)) 
-        end)},
+        {restorefunction, NewCClosure(function(Copy: any, ...: any): ...any
+			FrozenSettings.Output("[Rnox] restorefunction is blocked.")
+			return nil
+		end)},
         {debug and debug.getupvalue},
         {debug and debug.info},
         {setreadonly},
         {RawRequest},
         {getupvalues},
         {setupvalue},
+        {debug and debug.setupvalue},
         {debug and debug.getupvalues},
-        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any 
-            if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then 
-                return nil 
-            end 
-            return Copy(Object, Mt, ...) 
+        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any
+            if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then
+                return nil
+            end
+            return Copy(Object, Mt, ...)
         end)},
         {queueonteleport, NewCClosure(function(Copy: any, ...: any): any
             Copy("print('[Rnox Info] queueonteleport Blocked')")
             return nil
         end)},
-} do
+    } do
         local Function: any = Arguments[1]
         local Handler: any = Arguments[2]
         if Function and HookFunction then
             local Copy = CloneFunction(Function)
-            ProtectedCall(function(): ()
-            HookFunction(Function, NewCClosure(function(...): ...any
+            local Wrapper = NewCClosure(function(...): ...any
                 if not CheckCaller() then
                     return nil
                 end
@@ -173,43 +201,35 @@ local function Build(Settings)
                     return Handler(Copy, ...)
                 end
                 return Copy(...)
-            end))
-            RnoxHooked[Function] = true
-        end)
+            end)
+            RnoxHooked[Wrapper] = true
+            RnoxHooked[Copy] = true
+            ProtectedCall(function(): ()
+                HookFunction(Function, Wrapper)
+            end)
         end
     end
 
-    local RawHookFunction: ((...any) -> ...any)?
-    if HookFunction then
-        RawHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
-            for _, Function in next, Watched do
-                if RawEqual(Function, Target) then
-                    return Target
-                end
-            end
-            return RawHookFunction(Target, Replacement)
-        end))
-    end
-
     if GetGarbageCollection then
-        local RawGetGC: (...any) -> {any} = CloneFunction(getgc)
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
-        table.freeze(RnoxHooked)
-        table.freeze(Watched)
         local ProtectedFunctions: {[any]: boolean} = {}
-        ProtectedFunctions[RawHookFunction] = true
-        ProtectedFunctions[RawGetGC] = true
+        ProtectedFunctions[RawCloneFunction] = true
+        ProtectedFunctions[CloneReference] = true
+        ProtectedFunctions[RawNewCClosure] = true
+        ProtectedFunctions[WatchedHookFunction] = true
+        ProtectedFunctions[GetGarbageCollection] = true
+        if HookMetamethod then
+            ProtectedFunctions[HookMetamethod] = true
+        end
         if RawFilterGC then
             ProtectedFunctions[RawFilterGC] = true
         end
         for _, Function: any in next, Watched do
             ProtectedFunctions[Function] = true
         end
-        table.freeze(ProtectedFunctions)
-
         ProtectedCall(function(): ()
-            HookFunction(getgc, NewCClosure(function(...: any): {any}
-                local Results: {any} = RawGetGC(...)
+            WatchedHookFunction(getgc, NewCClosure(function(...: any): {any}
+                local Results: {any} = GetGarbageCollection(...)
                 for i: number = #Results, 1, -1 do
                     if ProtectedFunctions[Results[i]] then
                         TableRemove(Results, i)
@@ -218,10 +238,9 @@ local function Build(Settings)
                 return Results
             end))
         end)
-
         if filtergc and RawFilterGC then
             ProtectedCall(function(): ()
-                HookFunction(filtergc, NewCClosure(function(Type: string, Options: any, Single: boolean?): any
+                WatchedHookFunction(filtergc, NewCClosure(function(Type: string, Options: any, Single: boolean?): any
                     local Results: any = RawFilterGC(Type, Options, Single)
                     if Single then
                         return ProtectedFunctions[Results] and nil or Results
@@ -235,6 +254,9 @@ local function Build(Settings)
                 end))
             end)
         end
+        table.freeze(RnoxHooked)
+        table.freeze(Watched)
+        table.freeze(ProtectedFunctions)
     end
 
     TaskSpawn(function()
@@ -250,7 +272,7 @@ local function Build(Settings)
                             Title = "Rnox Warning",
                             Text = "Rnox's Environment is being tampered with. You are at risk",
                             Button1 = "Leave the game",
-                            Duration = math.huge,
+                            Duration = 60,
                         })
                     end)
                     if not Success then
@@ -266,7 +288,7 @@ local function Build(Settings)
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
-        NewCClosure = NewCClosure,
+        NewCClosure = RawNewCClosure,
         HookMetamethod = HookMetamethod,
         HookFunction = HookFunction,
         CheckCaller = CheckCaller,
