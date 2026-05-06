@@ -144,6 +144,7 @@ local function Build(Settings)
 
     local WatchedHookFunction: ((...any) -> ...any)?
     if HookFunction then
+        RnoxHooked[HookFunction] = true
         WatchedHookFunction = HookFunction(hookfunction, NewCClosure(function(Target: any, Replacement: any): any
             for _, Closure: any in next, Watched do
                 if RawEqual(Closure, Target) then
@@ -195,18 +196,19 @@ local function Build(Settings)
         local Handler: any = Arguments[2]
         if Function and HookFunction then
             local Copy = CloneFunction(Function)
+            local Wrapper = NewCClosure(function(...): ...any
+                if not CheckCaller() then
+                    return nil
+                end
+                if Handler then
+                    return Handler(Copy, ...)
+                end
+                return Copy(...)
+            end)
+            RnoxHooked[Wrapper] = true
+            RnoxHooked[Copy] = true
             ProtectedCall(function(): ()
-                local Wrapper = NewCClosure(function(...): ...any
-                    if not CheckCaller() then
-                        return nil
-                    end
-                    if Handler then
-                        return Handler(Copy, ...)
-                    end
-                    return Copy(...)
-                end)
                 HookFunction(Function, Wrapper)
-                RnoxHooked[Wrapper] = true
             end)
         end
     end
