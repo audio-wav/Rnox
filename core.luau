@@ -32,7 +32,7 @@ local function Build(Settings)
     end
     local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
     local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod) and CloneFunction(hookmetamethod) or nil
-    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction)
+    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction) and CloneFunction(hookfunction)
     local CheckCaller: () -> boolean = CloneFunction(
         Missing("function", checkcaller, function() return true end)
     )
@@ -288,7 +288,7 @@ local function Build(Settings)
         Missing = Missing,
         CloneReference = CloneReference,
         CloneFunction = CloneFunction,
-        NewCClosure = NewCClosure,
+        NewCClosure = RawNewCClosure,
         HookMetamethod = HookMetamethod,
         HookFunction = HookFunction,
         CheckCaller = CheckCaller,
