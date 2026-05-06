@@ -196,17 +196,18 @@ local function Build(Settings)
         if Function and HookFunction then
             local Copy = CloneFunction(Function)
             ProtectedCall(function(): ()
-            HookFunction(Function, NewCClosure(function(...): ...any
-                if not CheckCaller() then
-                    return nil
-                end
-                if Handler then
-                    return Handler(Copy, ...)
-                end
-                return Copy(...)
-            end))
-            RnoxHooked[Copy] = true
-        end)
+                local Wrapper = NewCClosure(function(...): ...any
+                    if not CheckCaller() then
+                        return nil
+                    end
+                    if Handler then
+                        return Handler(Copy, ...)
+                    end
+                    return Copy(...)
+                end)
+                HookFunction(Function, Wrapper)
+                RnoxHooked[Wrapper] = true
+            end)
         end
     end
 
