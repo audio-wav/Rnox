@@ -135,7 +135,7 @@ function Network:Init(Core: any): ()
                     else
                         Arguments[1].Url = "https://google.com"
                     end
-                    return OriginalRequest(table.unpack(Arguments))
+                    return
                 end
 
                 if StringFind(Url, "rpc")
