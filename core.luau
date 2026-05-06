@@ -13,16 +13,16 @@ local function Build(Settings)
          & (<T>(ValueType: string, Value: T?) -> T?)
     local Watched: {any} = {}
     local RawCloneFunction: typeof(clonefunction) = Missing("function", clonefunction, function(...) return ... end)
-    local RawCloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
+    local CloneReference: typeof(cloneref) = Missing("function", cloneref, function(...) return ... end)
     local CloneFunction: typeof(clonefunction) = function(Function: any): any
+        return RawCloneFunction(Function)
+    end
+    local WatchedCloneFunction = function(Function: any): any
         local Cloned = RawCloneFunction(Function)
         Watched[#Watched + 1] = Cloned
         return Cloned
     end
-    local CloneReference: typeof(cloneref) = function(ref: any): any
-        return RawCloneReference(ref)
-    end
-    local RawNewCClosure: typeof(newcclosure) = CloneFunction(
+    local RawNewCClosure: typeof(newcclosure) = WatchedCloneFunction(
         Missing("function", newcclosure, function(Function) return Function end)
     )
     local NewCClosure: typeof(newcclosure) = function(Function: any): any
@@ -30,9 +30,9 @@ local function Build(Settings)
         Watched[#Watched + 1] = Closure
         return Closure
     end
-    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and CloneFunction(isfunctionhooked)
-    local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod) and CloneFunction(hookmetamethod) or nil
-    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction) and CloneFunction(hookfunction)
+    local IsFunctionHooked: ((Function: any) -> boolean)? = Missing("function", isfunctionhooked) and WatchedCloneFunction(isfunctionhooked)
+    local HookMetamethod: typeof(hookmetamethod)? = Missing("function", hookmetamethod) and WatchedCloneFunction(hookmetamethod) or nil
+    local HookFunction: typeof(hookfunction)? = Missing("function", hookfunction) and WatchedCloneFunction(hookfunction)
     local CheckCaller: () -> boolean = CloneFunction(
         Missing("function", checkcaller, function() return true end)
     )
@@ -167,11 +167,11 @@ local function Build(Settings)
     end
 
     for _, Arguments in next, {
-        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any 
-            if not CheckCaller() then 
-                return nil 
-            end 
-            return (select(2, ...)) 
+        {RestoreFunction, NewCClosure(function(Copy: any, ...: any): ...any
+            if not CheckCaller() then
+                return nil
+            end
+            return (select(2, ...))
         end)},
         {debug and debug.getupvalue},
         {debug and debug.info},
@@ -181,17 +181,17 @@ local function Build(Settings)
         {setupvalue},
         {debug and debug.setupvalue},
         {debug and debug.getupvalues},
-        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any 
-            if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then 
-                return nil 
-            end 
-            return Copy(Object, Mt, ...) 
+        {setmetatable, NewCClosure(function(Copy: any, Object: any, Mt: any, ...: any): any
+            if not CheckCaller() and (RawEqual(Object, game) or RawEqual(Object, Game)) then
+                return nil
+            end
+            return Copy(Object, Mt, ...)
         end)},
         {queueonteleport, NewCClosure(function(Copy: any, ...: any): any
             Copy("print('[Rnox Info] queueonteleport Blocked')")
             return nil
         end)},
-} do
+    } do
         local Function: any = Arguments[1]
         local Handler: any = Arguments[2]
         if Function and HookFunction then
@@ -217,7 +217,7 @@ local function Build(Settings)
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
         local ProtectedFunctions: {[any]: boolean} = {}
         ProtectedFunctions[RawCloneFunction] = true
-        ProtectedFunctions[RawCloneReference] = true
+        ProtectedFunctions[CloneReference] = true
         ProtectedFunctions[RawNewCClosure] = true
         ProtectedFunctions[WatchedHookFunction] = true
         ProtectedFunctions[GetGarbageCollection] = true
