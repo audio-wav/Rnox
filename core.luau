@@ -210,10 +210,8 @@ local function Build(Settings)
         end
     end
 
-    if GetGarbageCollection then
+if GetGarbageCollection then
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
-        table.freeze(RnoxHooked)
-        table.freeze(Watched)
         local ProtectedFunctions: {[any]: boolean} = {}
         ProtectedFunctions[RawCloneFunction] = true
         ProtectedFunctions[RawCloneReference] = true
@@ -229,7 +227,6 @@ local function Build(Settings)
         for _, Function: any in next, Watched do
             ProtectedFunctions[Function] = true
         end
-        table.freeze(ProtectedFunctions)
         ProtectedCall(function(): ()
             WatchedHookFunction(getgc, NewCClosure(function(...: any): {any}
                 local Results: {any} = GetGarbageCollection(...)
@@ -257,6 +254,9 @@ local function Build(Settings)
                 end))
             end)
         end
+        table.freeze(RnoxHooked)
+        table.freeze(Watched)
+        table.freeze(ProtectedFunctions)
     end
 
     TaskSpawn(function()
