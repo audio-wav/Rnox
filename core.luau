@@ -210,7 +210,7 @@ local function Build(Settings)
         end
     end
 
-if GetGarbageCollection then
+    if GetGarbageCollection then
         local RawFilterGC: ((...any) -> any)? = filtergc and CloneFunction(filtergc) or nil
         local ProtectedFunctions: {[any]: boolean} = {}
         ProtectedFunctions[RawCloneFunction] = true
